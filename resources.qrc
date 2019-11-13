@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/icon_file.png</file>
+        <file>icons/icon_folder.png</file>
+        <file>icons/icon_nosync.png</file>
+        <file>icons/icon_profile.png</file>
+        <file>icons/icon_return.png</file>
+        <file>icons/icon_sync.png</file>
+        <file>icons/icon_upload.png</file>
+        <file>jsons/test_dir.json</file>
+        <file>jsons/test.json</file>
+    </qresource>
+</RCC>

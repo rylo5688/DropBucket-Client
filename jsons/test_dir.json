@@ -1,0 +1,33 @@
+{
+  "dirName": {
+    "dirs": [
+      {
+        "src": {
+          "dirs": [{
+            "dir2": {
+             "dirs": [],
+             "files": []
+            }
+          }, {
+            "dir3": {
+             "dirs": [],
+             "files": []
+            }
+          }],
+          "files": [
+            {
+              "name": "testfile1.txt",
+              "md5": "n3u4knjn23kjnd"
+            }
+          ]
+        }
+      }
+    ],
+    "files": [
+      {
+        "name": "package.json",
+        "md5": "ljk234io8jfs9o3"
+      }
+    ]
+  }
+}
