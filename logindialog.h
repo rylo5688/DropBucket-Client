@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QDebug>
+#include <QDir>
 
 namespace Ui {
 class LoginDialog;

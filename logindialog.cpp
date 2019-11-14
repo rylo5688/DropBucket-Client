@@ -30,14 +30,19 @@ void LoginDialog::on_signInButton_clicked()
     connect(google, &QOAuth2AuthorizationCodeFlow::authorizeWithBrowser, &QDesktopServices::openUrl);
 
     QString val;
+//    QFile file("../DropBucket-Client/client_secret_345154858390-sflcog4b6ritr42hjc5rim0uakdo85ep.apps.googleusercontent.com.json");
     QFile file;
-    file.setFileName("client_secret_345154858390-sflcog4b6ritr42hjc5rim0uakdo85ep.apps.googleusercontent.com.json");
+    file.setFileName("../DropBucket-Client/client_secret_345154858390-sflcog4b6ritr42hjc5rim0uakdo85ep.apps.googleusercontent.com.json");
+    qDebug() << file.exists();
+
+
     if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         val = file.readAll();
         file.close();
         qDebug() << "file opened";
      } else {
         qDebug() << "file not opened";
+        qDebug() << file.errorString();
      }
 
     qWarning() << val;
