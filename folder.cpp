@@ -17,3 +17,7 @@ void Folder::RemoveDir(Directory* dir) {
         }
     }
 }
+
+std::vector<Directory*> Folder::getContents() const {
+    return contents_;
+}

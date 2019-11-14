@@ -1,6 +1,20 @@
 {
-  "dirName": {
-		"dirs": [],
-		"files": []
-	}
+        "Files": [{
+		"test1.txt": {
+			"relativePath": "/DropBucket/",
+			"md5": "fndalijkp34"
+                }},
+                {"test2.txt": {
+			"relativePath": "/DropBucket/",
+			"md5": "fnqw7ihq4qf"
+                }},
+                {"test11.txt": {
+                        "relativePath": "/DropBucket/folder1/",
+			"md5": "knxklvczni4"
+                }},
+                {"test12.txt": {
+                        "relativePath": "/DropBucket/folder2/",
+			"md5": "pwqoeir3n2nf"
+                }}
+        ]
 }

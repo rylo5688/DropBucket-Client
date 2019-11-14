@@ -7,6 +7,12 @@
 class DataFile : public Directory
 {
 public:
+    enum { Type = UserType + 3 };
+
+    int type() const override {
+        return Type;
+    }
+
     DataFile(int x, int y, QPixmap pixmap, QGraphicsItem *parent = nullptr);
 
     std::string getMd5() const;

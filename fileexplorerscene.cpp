@@ -7,16 +7,16 @@ FileExplorerScene::FileExplorerScene()
     Q_INIT_RESOURCE(resources);
     LoadScene(QString::fromStdString("src"));
     factory_ = new SimpleDirectoryFactory();
+
+    QJsonObject json = OpenReadJSON();
+    CreateDirectoryComposite(json);
+    LoadScene("/DropBucket/");
 }
 
-void FileExplorerScene::AddIcon(int x, int y) {
-    QPixmap pixmap("://icons/icon_file.png");
-    Directory *test = new DataFile(x, y, pixmap);
-    addItem(test);
-    QGraphicsTextItem *temp = addText("test.txt");
-    temp->setPos(QPointF(0,56));
-    qreal textWidth = temp->textWidth();
-    qDebug() << textWidth;
+void FileExplorerScene::AddIcon(Directory* toAdd) {
+    toAdd->setPos(QPointF(0,0));
+    addItem(toAdd);
+//    toAdd->setPos(QPointF(-500, 500));
 }
 
 QStringList GetKeys(QJsonArray &jsonArray, std::string type) {
@@ -35,29 +35,19 @@ QStringList GetKeys(QJsonArray &jsonArray, std::string type) {
 }
 
 void FileExplorerScene::LoadScene(QString directory) {
-    // Read the JSON
-    QJsonObject json = OpenReadJSON();
-    CreateDirectoryComposite(json);
-
-
-//    QJsonArray folders = currDir["dirs"].toArray();
-//    QStringList folderNames = GetKeys(folders, "folder");
-//    QJsonArray files = currDir["files"].toArray();
-//    QStringList fileNames = GetKeys(files, "file");
-
-//    qDebug() << folderNames;
-//    qDebug() << fileNames;
-
-    // Loop through the QStringLists and add icons
-
-
-    // Get the path from input string - render out the necessary level
-    AddIcon(0,0);
+    std::map<QString, Directory*>::iterator it;
+    it = directoryMap_.find(directory);
+    if(it != directoryMap_.end()) {
+        // key exists load the scene
+        Directory* toLoad = directoryMap_[directory];
+        qDebug() << QString::fromStdString(toLoad->getContents()[0]->getName());
+        AddIcon(toLoad->getContents()[2]);
+    }
 }
 
 QJsonObject FileExplorerScene::OpenReadJSON() {
     Q_INIT_RESOURCE(resources);
-    QFile loadFile(QStringLiteral("://jsons/test_dir.json"));
+    QFile loadFile(QStringLiteral("://jsons/test.json"));
 
     if(!loadFile.open(QIODevice::ReadOnly)) {
         qDebug() << "couldn't read JSON";
@@ -92,59 +82,52 @@ bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
     return false;
 }
 
+/**
+ * @brief FileExplorerScene::CreateDirectoryComposite
+ * This function updates the directoryMap_ to reflect the composite structure defined by
+ * the json.
+ * @param json Reference to the QJsonObject to create the composite structure from.
+ */
 void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
-    std::vector<std::pair<QJsonObject, std::vector<QJsonObject>>> directories; // Directory to subdirectories
-
-    std::vector<QJsonObject> visited;
-    std::queue<QJsonObject> queue;
-    queue.push(json);
+    std::map<QString, Directory*>::iterator mapIt;
+    qDebug() << json;
+    QJsonArray files = json["Files"].toArray();
+    qDebug() << files;
     QJsonArray::iterator it;
-    Directory *parent;
-    bool root = true;
-    while(!queue.empty()) {
-        QJsonObject currDir = queue.front();
-        QStringList keys = currDir.keys();
-        qDebug() << keys[0] << currDir;
-        queue.pop();
+    for(it = files.begin(); it != files.end(); it++) {
+        QJsonObject currFile = (*it).toObject();
+        QString name = currFile.keys()[0];
+        currFile = currFile[name].toObject();
+        QString md5 = currFile["md5"].toString();
+        QString relativePath = currFile["relativePath"].toString();
+        QStringList splitPath = relativePath.split("/", QString::SkipEmptyParts);
+        qDebug() << splitPath;
+        mapIt = directoryMap_.find(relativePath);
+        Directory *newDir;
+        if(mapIt != directoryMap_.end()) {
+            // directory map contains the directory
+            newDir = directoryMap_[relativePath];
+        }
+        else {
+            //directory map doesn't contain the directory - create it
+            newDir = factory_->createDir(0, 0, "folder", splitPath[splitPath.size() - 1].toStdString());
+            splitPath.pop_back();
+            directoryMap_[relativePath] = newDir;
 
-        // Create root directory first
-//        if(root) {
-//            Directory* rootDir = factory_->createDir(0, 0, "folder", keys[0].toStdString());
-//            root_dir_ = rootDir;
-//            parent = rootDir;
-//            root = false;
-//        }
-//        else {
-//            // Find the parent in the
-//        }
-
-        QJsonObject trimCurrDir = currDir[keys[0]].toObject();
-        qDebug() << trimCurrDir;
-
-        QJsonArray subDirs;
-        subDirs = trimCurrDir["dirs"].toArray();
-//        qDebug() << subDirs;
-        std::vector<QJsonObject> sub;
-        for(it = subDirs.begin(); it != subDirs.end(); it++) {
-            QJsonObject newDir = (*it).toObject();
-            QStringList childKeys = newDir.keys();
-            qDebug() << "child: " << newDir;
-            sub.push_back(newDir);
-            if(!checkInVisited(&visited, newDir)) {
-                visited.push_back(newDir);
-                queue.push(newDir);
+            QString parent = "/" + splitPath.join('/') + "/";
+            if(parent != "//") {
+                qDebug() << parent;
+                Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
+                p->AddDir(newDir);
+                qDebug() << "updated";
             }
         }
-
-        directories.push_back(std::pair<QJsonObject, std::vector<QJsonObject>>(currDir, sub));
+        Directory *file = factory_->createDir(1000, 100, "file", name.toStdString(), md5.toStdString());
+        newDir->AddDir(file);
+        file->setPos(QPointF(200,200));
     }
 
-   for(int i = 0; i < directories.size(); i++) {
-       qDebug() << i << ": " << directories[i].first;
-       for(int j = 0; j < directories[i].second.size(); j++) {
-           qDebug() << "       " << j << ": " << directories[i].second[j];
-       }
-   }
+    qDebug() << directoryMap_.size();
 }
 
 void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {

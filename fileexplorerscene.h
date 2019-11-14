@@ -33,19 +33,20 @@ public:
 
     void write(QJsonObject &json) const;
 
-    void AddIcon(int x, int y);
+    void AddIcon(Directory* toAdd);
 
     QJsonObject OpenReadJSON();
 
-    std::vector<std::pair<QJsonObject, std::vector<QJsonObject>>> GetFileStructureVector(QJsonObject &json);
-
     void CreateDirectoryComposite(QJsonObject &json);
+
+
 
 private:
 
     QJsonObject* currJson_;
     SimpleDirectoryFactory* factory_;
-    std::vector<Directory*> directories_;
+    std::vector<Folder*> directories_;
+    std::map<QString, Directory*> directoryMap_;
 
     int curr_x_;
     int curr_y_; // both for plotting

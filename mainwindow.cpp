@@ -31,6 +31,7 @@ void SetupButtonIcon(QPushButton *button, std::string path) {
 void MainWindow::UISetUp() {
 
     fileExplorerScene = new FileExplorerScene;
+    fileExplorerScene->setSceneRect(0,0,ui->fileGraphicsView->size().width(), ui->fileGraphicsView->size().height());
     ui->fileGraphicsView->setScene(fileExplorerScene);
 
     filePathLabel = ui->pwdLabel;
