@@ -24,9 +24,13 @@ SOURCES += \
     folder.cpp \
     logindialog.cpp \
     main.cpp \
+    maintest.cpp \
     mainwindow.cpp \
     profiledialog.cpp \
     simpledirectoryfactory.cpp \
+    sync.cpp \
+    syncoff.cpp \
+    syncon.cpp \
     uploaddialog.cpp
 
 HEADERS += \
@@ -35,9 +39,13 @@ HEADERS += \
     fileexplorerscene.h \
     folder.h \
     logindialog.h \
+    maintest.h \
     mainwindow.h \
     profiledialog.h \
     simpledirectoryfactory.h \
+    sync.h \
+    syncoff.h \
+    syncon.h \
     uploaddialog.h
 
 FORMS += \

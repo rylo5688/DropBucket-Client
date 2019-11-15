@@ -5,10 +5,6 @@ DataFile::DataFile(int x, int y, QPixmap pixmap, QGraphicsItem *parent) : Direct
 
 }
 
-void DataFile::onClick() {
-
-}
-
 std::string DataFile::getMd5() const {
     return md5;
 }

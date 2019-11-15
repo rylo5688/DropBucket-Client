@@ -1,7 +1,9 @@
 #include "folder.h"
 
 Folder::Folder(int x, int y, QPixmap pixmap, QGraphicsItem *parent) : Directory(x, y, pixmap, parent)
-{ }
+{
+    setCursor(Qt::PointingHandCursor);
+}
 
 void Folder::AddDir(Directory* dir) {
     contents_.push_back(dir);
@@ -16,8 +18,4 @@ void Folder::RemoveDir(Directory* dir) {
             return;
         }
     }
-}
-
-std::vector<Directory*> Folder::getContents() const {
-    return contents_;
 }

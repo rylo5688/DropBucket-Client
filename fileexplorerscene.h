@@ -23,7 +23,9 @@ class FileExplorerScene : public QGraphicsScene
 public:
     FileExplorerScene();
 
-    void LoadScene(QString directory); // function to load all the icons of the current directory
+    void LoadCurrDirParent();
+
+    void LoadScene(Directory* dir); // function to load all the icons of the current directory
 
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override; // handles when mouse clicks a file/folder
 
@@ -33,19 +35,23 @@ public:
 
     void write(QJsonObject &json) const;
 
-    void AddIcon(Directory* toAdd);
+    void AddIcon(int x, int y, Directory* toAdd);
+
+    void AddIcons(std::vector<Directory*> contents);
 
     QJsonObject OpenReadJSON();
 
     void CreateDirectoryComposite(QJsonObject &json);
 
+    int getDirectoryMapSize() { return directoryMap_.size(); }
 
+signals:
+    void UpdateDirectoryLabel(QString label);
 
 private:
 
     QJsonObject* currJson_;
     SimpleDirectoryFactory* factory_;
-    std::vector<Folder*> directories_;
     std::map<QString, Directory*> directoryMap_;
 
     int curr_x_;

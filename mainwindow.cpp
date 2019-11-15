@@ -34,20 +34,24 @@ void MainWindow::UISetUp() {
     fileExplorerScene->setSceneRect(0,0,ui->fileGraphicsView->size().width(), ui->fileGraphicsView->size().height());
     ui->fileGraphicsView->setScene(fileExplorerScene);
 
+    // Connect signals
+    connect(fileExplorerScene, &FileExplorerScene::UpdateDirectoryLabel, this, &MainWindow::UpdateDirectoryLabel);
+
     filePathLabel = ui->pwdLabel;
-    filePathLabel->setText("C:/DropBucket"); // Place holder
+    filePathLabel->setText("/DropBucket/"); // Place holder
 //    QPushButton *syncButton = ui->syncButton;
 
 //    SetupButtonIcon(syncButton, ":/icons/icon_sync.png");
     qDebug() << ui->fileGraphicsView->size();
 }
 
-void MainWindow::UpdateDirectoryLabel(std::string label) {
-    filePathLabel->setText(QString::fromStdString(label));
+void MainWindow::UpdateDirectoryLabel(QString label) {
+    filePathLabel->setText(label);
 }
 
 void MainWindow::on_syncButton_clicked() {
     qDebug() << "Sync button clicked";
+    // TODO - Sync State implemented
     // Want to change the state based on click
 
     // Update the icon to reflect the current state
@@ -55,7 +59,7 @@ void MainWindow::on_syncButton_clicked() {
 
 void MainWindow::on_returnButton_clicked() {
     qDebug() << "Return button clicked";
-    // Traverse one level up in the json and load the files into the file explorer
+    fileExplorerScene->LoadCurrDirParent();
 }
 
 void MainWindow::on_uploadButton_clicked() {

@@ -19,10 +19,9 @@ public:
 
     void setMd5(std::string md5);
 
-    void onClick();
-
 private:
     std::string md5;
+
 };
 
 #endif // DATAFILE_H

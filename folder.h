@@ -2,6 +2,8 @@
 #define FOLDER_H
 
 #include <QObject>
+#include <QApplication>
+#include <QGraphicsSceneHoverEvent>
 #include "directory.h"
 #include "datafile.h"
 
@@ -20,10 +22,9 @@ public:
 
     void RemoveDir(Directory* dir) override;
 
-    std::vector<Directory*> getContents() const override;
+//    void onClick() override;
 
 private:
-    std::vector<Directory*> contents_;
 };
 
 #endif // FOLDER_H

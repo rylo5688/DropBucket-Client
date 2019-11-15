@@ -20,8 +20,6 @@ public:
 
     void UISetUp();
 
-    void UpdateDirectoryLabel(std::string label);
-
 private:
     Ui::MainWindow *ui;
 
@@ -41,5 +39,7 @@ private slots:
     void on_syncButton_clicked();
 
     void on_returnButton_clicked();
+
+    void UpdateDirectoryLabel(QString label);
 };
 #endif // MAINWINDOW_H

@@ -4,7 +4,7 @@ Directory::Directory(int x, int y, QPixmap pixmap, QGraphicsItem *parent) : QGra
 {
     this->x = x;
     this->y = y;
-    setPos(QPointF(x,y));
+    parent = nullptr;
 }
 
 QRectF Directory::boundingRect() const {
@@ -22,12 +22,29 @@ void Directory::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     Q_UNUSED(widget);
 
     painter->drawPixmap(QPointF(x,y), pixmap(), boundingRect());
+    painter->drawText(QPoint(x + 10, y + 65), QString::fromStdString(name));
+}
+
+Directory* Directory::getParent() {
+    return parent;
 }
 
 std::string Directory::getName() const {
     return name;
 }
 
+std::string Directory::getRelativePath() const {
+    return relativePath_;
+}
+
 void Directory::setName(std::string n) {
     name = n;
+}
+
+void Directory::setRelativePath(std::string path) {
+    relativePath_ = path;
+}
+
+void Directory::setParent(Directory *parent) {
+    this->parent = parent;
 }

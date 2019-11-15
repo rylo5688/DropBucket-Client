@@ -5,44 +5,55 @@ FileExplorerScene::FileExplorerScene()
 //    QPixmap pixmap("://icons/icon_file.png");
 //    addPixmap(pixmap);
     Q_INIT_RESOURCE(resources);
-    LoadScene(QString::fromStdString("src"));
+
+    curr_x_ = 0;
+    curr_y_ = 0;
+
     factory_ = new SimpleDirectoryFactory();
 
     QJsonObject json = OpenReadJSON();
     CreateDirectoryComposite(json);
-    LoadScene("/DropBucket/");
+    LoadScene(root_dir_);
+    curr_dir_ = root_dir_;
 }
 
-void FileExplorerScene::AddIcon(Directory* toAdd) {
-    toAdd->setPos(QPointF(0,0));
+void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
+    std::vector<Directory*>::iterator it;
+    for(int i = 0; i < contents.size(); i++) {
+        qDebug() << contents[i];
+    }
+    int offset_x = 50;
+    int offset_y = 10;
+    for(it = contents.begin(); it != contents.end(); it++){
+        qDebug() << "gere" << *it;
+        AddIcon(curr_x_ + offset_x, curr_y_ + offset_y, *it);
+        curr_x_ += 56 + offset_x;
+    }
+}
+
+void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
+    qDebug() << "adding" << toAdd;
+    toAdd->setPos(QPointF(x,y));
     addItem(toAdd);
 //    toAdd->setPos(QPointF(-500, 500));
 }
 
-QStringList GetKeys(QJsonArray &jsonArray, std::string type) {
-    QJsonArray::iterator it;
-    QStringList temp;
-    for(it = jsonArray.begin(); it != jsonArray.end(); it++) {
-        if(type == "folder") {
-            temp = it->toObject().keys();
-        }
-        else if(type == "file") {
-            temp.append(it->toObject().value("name").toString());
-        }
+void FileExplorerScene::LoadCurrDirParent() {
+    Directory *toLoad = curr_dir_->getParent();
+    if(toLoad != nullptr) {
+        qDebug() << "Loading parent";
+        LoadScene(toLoad);
     }
-
-    return temp;
 }
 
-void FileExplorerScene::LoadScene(QString directory) {
-    std::map<QString, Directory*>::iterator it;
-    it = directoryMap_.find(directory);
-    if(it != directoryMap_.end()) {
-        // key exists load the scene
-        Directory* toLoad = directoryMap_[directory];
-        qDebug() << QString::fromStdString(toLoad->getContents()[0]->getName());
-        AddIcon(toLoad->getContents()[2]);
-    }
+void FileExplorerScene::LoadScene(Directory* dir) {
+    clear();
+    curr_dir_ = dir;
+    curr_x_ = 0;
+    curr_y_ = 0;
+    AddIcons(dir->getContents());
+    UpdateDirectoryLabel(QString::fromStdString(dir->getRelativePath()));
+    update();
 }
 
 QJsonObject FileExplorerScene::OpenReadJSON() {
@@ -55,14 +66,10 @@ QJsonObject FileExplorerScene::OpenReadJSON() {
 
     QByteArray dirData = loadFile.readAll();
 
-//    qDebug() << dirData;
     QJsonParseError err;
     QJsonDocument dirDoc(QJsonDocument::fromJson(dirData, &err));
-//    qDebug() << err.errorString();
 
     QJsonObject obj = dirDoc.object();
-
-//    qDebug() << obj.size();
 
     return obj;
 }
@@ -74,7 +81,6 @@ bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
 
     for(auto it = visited->begin(); it != visited->end(); it++) {
         if(*it == find) {
-            qDebug() << "here";
             return true;
         }
     }
@@ -111,8 +117,13 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
         else {
             //directory map doesn't contain the directory - create it
             newDir = factory_->createDir(0, 0, "folder", splitPath[splitPath.size() - 1].toStdString());
+            newDir->setRelativePath(relativePath.toStdString());
             splitPath.pop_back();
             directoryMap_[relativePath] = newDir;
+
+            if(relativePath == "/DropBucket/") {
+                root_dir_ = newDir;
+            }
 
             QString parent = "/" + splitPath.join('/') + "/";
             if(parent != "//") {
@@ -120,11 +131,12 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
                 Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
                 p->AddDir(newDir);
                 qDebug() << "updated";
+                newDir->setParent(p);
             }
         }
-        Directory *file = factory_->createDir(1000, 100, "file", name.toStdString(), md5.toStdString());
+        Directory *file = factory_->createDir(0, 0, "file", name.toStdString(), md5.toStdString());
         newDir->AddDir(file);
-        file->setPos(QPointF(200,200));
+        file->setRelativePath(relativePath.toStdString());
     }
 
     qDebug() << directoryMap_.size();
@@ -134,6 +146,19 @@ void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsScene::mousePressEvent(event);
     if(itemAt(event->scenePos(), QTransform()) != nullptr) {
         QGraphicsItem *clicked = itemAt(event->scenePos(), QTransform());
-        qDebug() << clicked;
+        qDebug() << clicked->type();
+        // TODO - handle clicks on folders = render new scene
+        if(clicked->type() == 65538) {
+            // Folder - open its contents
+            if(clicked != root_dir_) {
+                Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
+                if(dir != 0) {
+                    LoadScene(dir);
+                }
+                else {
+                    qDebug() << "error";
+                }
+            }
+        }
     }
 }
