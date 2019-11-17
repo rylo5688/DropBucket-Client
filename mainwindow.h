@@ -5,6 +5,7 @@
 #include <QLabel>
 #include "fileexplorerscene.h"
 #include "logindialog.h"
+#include "sync.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,6 +31,8 @@ private:
     std::string currentDirectory;
 
     LoginDialog* login_;
+
+    Sync* sync_;
 
 private slots:
     void on_uploadButton_clicked();
