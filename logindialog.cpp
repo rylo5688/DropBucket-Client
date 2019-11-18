@@ -33,8 +33,8 @@ void LoginDialog::on_signInButton_clicked()
     QString val;
 //    QFile file("../DropBucket-Client/client_secret_345154858390-sflcog4b6ritr42hjc5rim0uakdo85ep.apps.googleusercontent.com.json");
     QFile file;
-
-    if (!QDir::setCurrent(QStringLiteral("../../../../")))
+    // ../../../
+    if (!QDir::setCurrent(QStringLiteral("../")))
         qDebug() << "Could not change the current working directory";
 
     file.setFileName("DropBucket-Client/client_secret.json");
@@ -78,6 +78,7 @@ void LoginDialog::on_signInButton_clicked()
            qDebug() << reply->readAll();
        });
     });
-
+    // CHECK OPENSSL VERSION HERE
+    qDebug() << QSslSocket::supportsSsl() << QSslSocket::sslLibraryBuildVersionString() << QSslSocket::sslLibraryVersionString();
     qDebug() << "sign in button clicked";
 }
