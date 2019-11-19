@@ -46,6 +46,7 @@ protected:
 
     std::vector<Directory*> contents_;
 
+
 private:
 };
 

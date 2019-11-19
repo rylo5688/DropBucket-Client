@@ -19,6 +19,7 @@ FileExplorerScene::FileExplorerScene()
 
 void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
     std::vector<Directory*>::iterator it;
+    qDebug() << "Contents:";
     for(int i = 0; i < contents.size(); i++) {
         qDebug() << contents[i];
     }
@@ -32,9 +33,9 @@ void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
 }
 
 void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
-    qDebug() << "adding" << toAdd;
     toAdd->setPos(QPointF(x,y));
     addItem(toAdd);
+    curr_loaded_.push_back(toAdd);
 //    toAdd->setPos(QPointF(-500, 500));
 }
 
@@ -47,10 +48,22 @@ void FileExplorerScene::LoadCurrDirParent() {
 }
 
 void FileExplorerScene::LoadScene(Directory* dir) {
-    clear();
+//    clear();
+    if(curr_loaded_.size() != 0) {
+        std::vector<Directory*>::iterator it;
+        for(it = curr_loaded_.begin(); it != curr_loaded_.end(); it++) {
+            removeItem(*it);
+        }
+    }
+    curr_loaded_.clear();
+
     curr_dir_ = dir;
     curr_x_ = 0;
     curr_y_ = 0;
+    qDebug() << "cleared scene, loading contents";
+    std::vector<Directory*> contents = dir->getContents();
+    qDebug() << "Got contents";
+    qDebug() << contents.at(0);
     AddIcons(dir->getContents());
     UpdateDirectoryLabel(QString::fromStdString(dir->getRelativePath()));
     update();
@@ -152,7 +165,7 @@ void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             // Folder - open its contents
             if(clicked != root_dir_) {
                 Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
-                if(dir != 0) {
+                if(clicked != 0) {
                     LoadScene(dir);
                 }
                 else {

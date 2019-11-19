@@ -59,6 +59,7 @@ private:
 
     Directory *root_dir_;
     Directory *curr_dir_;
+    std::vector<Directory*> curr_loaded_;
 };
 
 #endif // FILEEXPLORERSCENE_H
