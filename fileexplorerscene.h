@@ -55,6 +55,9 @@ public:
 signals:
     void UpdateDirectoryLabel(QString label);
 
+public slots:
+    void AddFile(QString filePath, std::string Md5);
+
 private:
 
     QJsonObject* currJson_;

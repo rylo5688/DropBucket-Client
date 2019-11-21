@@ -1,5 +1,8 @@
 #include "fileexplorerscene.h"
 
+/**
+ * @brief FileExplorerScene::FileExplorerScene
+ */
 FileExplorerScene::FileExplorerScene()
 {
 //    QPixmap pixmap("://icons/icon_file.png");
@@ -16,8 +19,20 @@ FileExplorerScene::FileExplorerScene()
     LoadScene(root_dir_);
     curr_dir_ = root_dir_;
 
+    /**
+    TODO
+    - Sync State pattern
+    - Delete file menu - ask team
+    - Profile Dialog
+    - Start log in dialog on start up
+    */
+
 }
 
+/**
+ * @brief FileExplorerScene::AddIcons
+ * @param contents
+ */
 void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
     std::vector<Directory*>::iterator it;
     int offset_x = 50;
@@ -28,6 +43,12 @@ void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
     }
 }
 
+/**
+ * @brief FileExplorerScene::AddIcon
+ * @param x
+ * @param y
+ * @param toAdd
+ */
 void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
     toAdd->setPos(QPointF(x,y));
     addItem(toAdd);
@@ -37,14 +58,23 @@ void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
     update();
 }
 
+/**
+ * @brief FileExplorerScene::LoadCurrDirParent
+ */
 void FileExplorerScene::LoadCurrDirParent() {
-    Directory *toLoad = curr_dir_->getParent();
-    if(toLoad != nullptr) {
-        qDebug() << "Loading parent";
-        LoadScene(toLoad);
+    if(curr_dir_ != root_dir_) {
+        Directory *toLoad = curr_dir_->getParent();
+        if(toLoad != nullptr) {
+            qDebug() << "Loading parent";
+            LoadScene(toLoad);
+        }
     }
 }
 
+/**
+ * @brief FileExplorerScene::LoadScene
+ * @param dir
+ */
 void FileExplorerScene::LoadScene(Directory* dir) {
 //    clear();
     if(curr_loaded_.size() != 0) {
@@ -67,6 +97,10 @@ void FileExplorerScene::LoadScene(Directory* dir) {
     update();
 }
 
+/**
+ * @brief FileExplorerScene::OpenReadJSON
+ * @return
+ */
 QJsonObject FileExplorerScene::OpenReadJSON() {
     Q_INIT_RESOURCE(resources);
     QFile loadFile(QStringLiteral("://jsons/test.json"));
@@ -85,6 +119,12 @@ QJsonObject FileExplorerScene::OpenReadJSON() {
     return obj;
 }
 
+/**
+ * @brief checkInVisited
+ * @param visited
+ * @param find
+ * @return
+ */
 bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
     if(visited->size() == 0) {
         return false;
@@ -146,15 +186,27 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
     }
 }
 
+/**
+ * @brief FileExplorerScene::dragMoveEvent
+ * @param event
+ */
 void FileExplorerScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event) {
     event->acceptProposedAction();
 }
 
+/**
+ * @brief FileExplorerScene::dragEnterEvent
+ * @param event
+ */
 void FileExplorerScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event) {
     event->acceptProposedAction();
 }
 
 // https://wiki.qt.io/Drag_and_Drop_of_files
+/**
+ * @brief FileExplorerScene::dropEvent
+ * @param event
+ */
 void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
     const QMimeData* mimeData = event->mimeData();
 
@@ -164,21 +216,11 @@ void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
 
         QList<QUrl>::iterator it;
         for(it = urlLIst.begin(); it != urlLIst.end(); it++) {
+            QByteArray md5 = QCryptographicHash::hash(mimeData->data(GetMimeType(mimeData)), QCryptographicHash::Md5);
+            std::string Md5 = QString(md5).toStdString();
             QString url = (*it).toLocalFile();
+            AddFile(url, Md5);
             pathList.append(url);
-            QStringList splitPath = url.split("/", QString::SkipEmptyParts);
-            const QDir pathDir(url);
-            if(!pathDir.exists()) {
-                // Check it is a directory - maybe explore the whole folder and upload it - later
-                qDebug() << "file";
-                // Create the file - add it to the directory
-                QByteArray md5 = QCryptographicHash::hash(mimeData->data(GetMimeType(mimeData)), QCryptographicHash::Md5);
-                std::string Md5 = QString(md5).toStdString();
-                Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1].toStdString(), Md5);
-                file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1].toStdString());
-                curr_dir_->AddDir(file);
-                AddIcon(curr_x_ + 50, curr_y_ + 10, file);
-            }
         }
         qDebug() << pathList;
 
@@ -186,6 +228,25 @@ void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
     }
 }
 
+void FileExplorerScene::AddFile(QString filePath, std::string md5) {
+    QStringList splitPath = filePath.split("/", QString::SkipEmptyParts);
+    const QDir pathDir(filePath);
+    if(!pathDir.exists()) {
+        // Check it is a directory - maybe explore the whole folder and upload it - later
+        qDebug() << "file";
+        // Create the file - add it to the directory
+        Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1].toStdString(), md5);
+        file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1].toStdString());
+        curr_dir_->AddDir(file);
+        AddIcon(curr_x_ + 50, curr_y_ + 10, file);
+    }
+}
+
+/**
+ * @brief FileExplorerScene::GetMimeType
+ * @param inData
+ * @return
+ */
 QString FileExplorerScene::GetMimeType(const QMimeData *inData) {
     if(inData->hasHtml()){
         return "text/html";
@@ -201,12 +262,15 @@ QString FileExplorerScene::GetMimeType(const QMimeData *inData) {
     }
 }
 
+/**
+ * @brief FileExplorerScene::mousePressEvent
+ * @param event
+ */
 void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsScene::mousePressEvent(event);
     if(itemAt(event->scenePos(), QTransform()) != nullptr) {
         QGraphicsItem *clicked = itemAt(event->scenePos(), QTransform());
         qDebug() << clicked->type();
-        // TODO - handle clicks on folders = render new scene
         if(clicked->type() == 65538) {
             // Folder - open its contents
             if(clicked != root_dir_) {

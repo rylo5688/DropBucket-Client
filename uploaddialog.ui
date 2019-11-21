@@ -101,20 +101,20 @@
     <string>File Upload</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="chooseButton">
    <property name="geometry">
     <rect>
      <x>300</x>
      <y>100</y>
-     <width>75</width>
-     <height>23</height>
+     <width>71</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
     <string>Choose File</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="uploadButton">
    <property name="geometry">
     <rect>
      <x>140</x>
@@ -132,6 +132,16 @@ QPushButton:pressed { background-color: rgb(144, 144, 144);  }</string>
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="dirEdit">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>100</y>
+     <width>261</width>
+     <height>20</height>
+    </rect>
    </property>
   </widget>
  </widget>

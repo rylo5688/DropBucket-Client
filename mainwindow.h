@@ -6,6 +6,7 @@
 #include "fileexplorerscene.h"
 #include "logindialog.h"
 #include "sync.h"
+#include "uploaddialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -31,6 +32,8 @@ private:
     std::string currentDirectory;
 
     LoginDialog* login_;
+
+    UploadDialog* upload_;
 
     Sync* sync_;
 

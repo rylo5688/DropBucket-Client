@@ -8,7 +8,6 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    login_ = new LoginDialog(this);
     UISetUp();
 }
 
@@ -29,13 +28,15 @@ void SetupButtonIcon(QPushButton *button, std::string path) {
  * Function to setup the folder structure.
  */
 void MainWindow::UISetUp() {
-
+    login_ = new LoginDialog(this);
+    upload_ = new UploadDialog(this);
     fileExplorerScene = new FileExplorerScene;
     fileExplorerScene->setSceneRect(0,0,ui->fileGraphicsView->size().width(), ui->fileGraphicsView->size().height());
     ui->fileGraphicsView->setScene(fileExplorerScene);
 
     // Connect signals
     connect(fileExplorerScene, &FileExplorerScene::UpdateDirectoryLabel, this, &MainWindow::UpdateDirectoryLabel);
+    connect(upload_, &UploadDialog::UploadFile, fileExplorerScene, &FileExplorerScene::AddFile);
 
     filePathLabel = ui->pwdLabel;
     filePathLabel->setText("/DropBucket/"); // Place holder
@@ -65,6 +66,7 @@ void MainWindow::on_returnButton_clicked() {
 void MainWindow::on_uploadButton_clicked() {
     // Start upload dialog
     qDebug() << "Upload button clicked";
+    upload_->show();
 }
 
 void MainWindow::on_profileButton_clicked() {
