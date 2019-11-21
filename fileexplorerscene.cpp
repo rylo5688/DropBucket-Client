@@ -15,18 +15,14 @@ FileExplorerScene::FileExplorerScene()
     CreateDirectoryComposite(json);
     LoadScene(root_dir_);
     curr_dir_ = root_dir_;
+
 }
 
 void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
     std::vector<Directory*>::iterator it;
-    qDebug() << "Contents:";
-    for(int i = 0; i < contents.size(); i++) {
-        qDebug() << contents[i];
-    }
     int offset_x = 50;
     int offset_y = 10;
     for(it = contents.begin(); it != contents.end(); it++){
-        qDebug() << "gere" << *it;
         AddIcon(curr_x_ + offset_x, curr_y_ + offset_y, *it);
         curr_x_ += 56 + offset_x;
     }
@@ -36,7 +32,9 @@ void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
     toAdd->setPos(QPointF(x,y));
     addItem(toAdd);
     curr_loaded_.push_back(toAdd);
-//    toAdd->setPos(QPointF(-500, 500));
+
+    qDebug() << curr_x_ << curr_y_;
+    update();
 }
 
 void FileExplorerScene::LoadCurrDirParent() {
@@ -60,7 +58,7 @@ void FileExplorerScene::LoadScene(Directory* dir) {
     curr_dir_ = dir;
     curr_x_ = 0;
     curr_y_ = 0;
-    qDebug() << "cleared scene, loading contents";
+    qDebug() << "cleared scen e, loading contents";
     std::vector<Directory*> contents = dir->getContents();
     qDebug() << "Got contents";
     qDebug() << contents.at(0);
@@ -109,9 +107,7 @@ bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
  */
 void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
     std::map<QString, Directory*>::iterator mapIt;
-    qDebug() << json;
     QJsonArray files = json["Files"].toArray();
-    qDebug() << files;
     QJsonArray::iterator it;
     for(it = files.begin(); it != files.end(); it++) {
         QJsonObject currFile = (*it).toObject();
@@ -120,7 +116,6 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
         QString md5 = currFile["md5"].toString();
         QString relativePath = currFile["relativePath"].toString();
         QStringList splitPath = relativePath.split("/", QString::SkipEmptyParts);
-        qDebug() << splitPath;
         mapIt = directoryMap_.find(relativePath);
         Directory *newDir;
         if(mapIt != directoryMap_.end()) {
@@ -140,10 +135,8 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
 
             QString parent = "/" + splitPath.join('/') + "/";
             if(parent != "//") {
-                qDebug() << parent;
                 Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
                 p->AddDir(newDir);
-                qDebug() << "updated";
                 newDir->setParent(p);
             }
         }
@@ -151,8 +144,61 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
         newDir->AddDir(file);
         file->setRelativePath(relativePath.toStdString());
     }
+}
 
-    qDebug() << directoryMap_.size();
+void FileExplorerScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event) {
+    event->acceptProposedAction();
+}
+
+void FileExplorerScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event) {
+    event->acceptProposedAction();
+}
+
+// https://wiki.qt.io/Drag_and_Drop_of_files
+void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
+    const QMimeData* mimeData = event->mimeData();
+
+    if(mimeData->hasUrls()) {
+        QStringList pathList;
+        QList<QUrl> urlLIst = mimeData->urls();
+
+        QList<QUrl>::iterator it;
+        for(it = urlLIst.begin(); it != urlLIst.end(); it++) {
+            QString url = (*it).toLocalFile();
+            pathList.append(url);
+            QStringList splitPath = url.split("/", QString::SkipEmptyParts);
+            const QDir pathDir(url);
+            if(!pathDir.exists()) {
+                // Check it is a directory - maybe explore the whole folder and upload it - later
+                qDebug() << "file";
+                // Create the file - add it to the directory
+                QByteArray md5 = QCryptographicHash::hash(mimeData->data(GetMimeType(mimeData)), QCryptographicHash::Md5);
+                std::string Md5 = QString(md5).toStdString();
+                Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1].toStdString(), Md5);
+                file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1].toStdString());
+                curr_dir_->AddDir(file);
+                AddIcon(curr_x_ + 50, curr_y_ + 10, file);
+            }
+        }
+        qDebug() << pathList;
+
+        // Now we can open and do stuff with the files - want to add file to scene
+    }
+}
+
+QString FileExplorerScene::GetMimeType(const QMimeData *inData) {
+    if(inData->hasHtml()){
+        return "text/html";
+    }
+    else if(inData->hasText()) {
+        return "text/plain";
+    }
+    else if(inData->hasImage()) {
+        return "image/*";
+    }
+    else {
+        return "no";
+    }
 }
 
 void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
@@ -165,7 +211,7 @@ void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
             // Folder - open its contents
             if(clicked != root_dir_) {
                 Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
-                if(clicked != 0) {
+                if(clicked != nullptr) {
                     LoadScene(dir);
                 }
                 else {

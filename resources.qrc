@@ -9,5 +9,6 @@
         <file>icons/icon_upload.png</file>
         <file>jsons/test_dir.json</file>
         <file>jsons/test.json</file>
+        <file>icons/upload.png</file>
     </qresource>
 </RCC>

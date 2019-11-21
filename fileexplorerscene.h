@@ -11,7 +11,10 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QUrl>
+#include <QDir>
 #include <QGraphicsSceneMouseEvent>
+#include <QCryptographicHash>
 #include <queue>
 #include "directory.h"
 #include "datafile.h"
@@ -27,11 +30,15 @@ public:
 
     void LoadScene(Directory* dir); // function to load all the icons of the current directory
 
+    QString GetMimeType(const QMimeData *inData);
+
     void mousePressEvent(QGraphicsSceneMouseEvent *event) override; // handles when mouse clicks a file/folder
 
-//    void dragEnterEvent(QGraphicsSceneDragDropEvent *event) override;
+    void dragEnterEvent(QGraphicsSceneDragDropEvent *event) override;
 
-//    void dropEvent(QGraphicsSceneDragDropEvent *event) override;
+    void dragMoveEvent(QGraphicsSceneDragDropEvent *event) override;
+
+    void dropEvent(QGraphicsSceneDragDropEvent *event) override;
 
     void write(QJsonObject &json) const;
 
