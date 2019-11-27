@@ -17,6 +17,8 @@ LoginDialog::~LoginDialog()
 
 void LoginDialog::on_signInButton_clicked()
 {
-    // PUT OAUTH STUFF HERE
+    // PUT LOGIN STUFF HERE
     qDebug() << "sign in button clicked";
+    qDebug() << ui->emailLineEdit->text();
+    qDebug() << ui->passwordLineEdit->text();
 }

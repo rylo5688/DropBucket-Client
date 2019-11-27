@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QDataStream>
 #include <QNetworkAccessManager>
+#include <QFile>
 
 class NetworkManager : public QObject
 {
@@ -20,7 +21,12 @@ private slots:
 
 private:
     QTcpSocket* socket_;
+    QUrl url;
     QNetworkAccessManager manager_;
+    QNetworkRequest request_;
+    QNetworkReply *reply_;
+    QFile *file;
+    bool httpRequestAborted_;
     QDataStream in;
 };
 

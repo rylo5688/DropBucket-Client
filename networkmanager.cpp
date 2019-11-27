@@ -1,5 +1,11 @@
 #include "networkmanager.h"
 
+/**
+ * @brief NetworkManager::NetworkManager
+ * TCP example - https://www.bogotobogo.com/cplusplus/sockets_server_client_QT.php
+ * HTTP example - https://code.qt.io/cgit/qt/qtbase.git/tree/examples/network/http?h=5.13
+ */
+
 NetworkManager::NetworkManager()
 {
     socket_ = new QTcpSocket;
