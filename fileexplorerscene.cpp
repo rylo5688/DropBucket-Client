@@ -21,7 +21,6 @@ FileExplorerScene::FileExplorerScene()
 
     /**
     TODO
-    - Sync State pattern
     - Delete file menu - ask team
     - Profile Dialog
     - Start log in dialog on start up
@@ -238,8 +237,16 @@ void FileExplorerScene::AddFile(QString filePath, std::string md5) {
         Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1].toStdString(), md5);
         file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1].toStdString());
         curr_dir_->AddDir(file);
-        AddIcon(curr_x_ + 50, curr_y_ + 10, file);
+        curr_x_ += 50;
+        AddIcon(curr_x_, curr_y_ + 10, file);
+        curr_x_ += 56;
     }
+}
+
+void FileExplorerScene::CompareDirectory(QFileInfoList files) {
+    qDebug() << "COMPARING";
+    qDebug() << files;
+    // Want to use the most updated file info
 }
 
 /**
@@ -263,6 +270,20 @@ QString FileExplorerScene::GetMimeType(const QMimeData *inData) {
 }
 
 /**
+ * @brief FileExplorerScene::getDirectoryKeys
+ * @return
+ */
+QStringList FileExplorerScene::getDirectoryKeys() {
+    QStringList directories;
+    std::map<QString, Directory*>::iterator it;
+    for(it = directoryMap_.begin(); it != directoryMap_.end(); it++) {
+        directories.push_back(it->first);
+    }
+
+    return directories;
+}
+
+/**
  * @brief FileExplorerScene::mousePressEvent
  * @param event
  */
@@ -270,18 +291,26 @@ void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsScene::mousePressEvent(event);
     if(itemAt(event->scenePos(), QTransform()) != nullptr) {
         QGraphicsItem *clicked = itemAt(event->scenePos(), QTransform());
-        qDebug() << clicked->type();
-        if(clicked->type() == 65538) {
-            // Folder - open its contents
-            if(clicked != root_dir_) {
-                Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
-                if(clicked != nullptr) {
-                    LoadScene(dir);
-                }
-                else {
-                    qDebug() << "error";
+        if(event->button() == Qt::LeftButton) {
+            qDebug() << clicked->type();
+            if(clicked->type() == 65538) {
+                // Folder - open its contents
+                if(clicked != root_dir_) {
+                    Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
+                    if(clicked != nullptr) {
+                        LoadScene(dir);
+                    }
+                    else {
+                        qDebug() << "error";
+                    }
                 }
             }
         }
+        else if(event->button() == Qt::RightButton) {
+            if(clicked->type() == 65539) {
+                qDebug() << "File!";
+            }
+        }
+
     }
 }

@@ -1,6 +1,6 @@
 #include "syncoff.h"
 
-SyncOff::SyncOff()
+SyncOff::SyncOff() : Sync()
 {
-
+    watcher_ = nullptr;
 }

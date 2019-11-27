@@ -92,9 +92,10 @@
     </font>
    </property>
    <property name="styleSheet">
-    <string notr="true">QPushButton {background-color: rgb(223, 43, 43);}
+    <string notr="true">QPushButton {background-color: rgb(223, 43, 43); color: white;}
 
-QPushButton.font {background-color: rgb(223, 43, 43);}</string>
+QPushButton.font {background-color: rgb(223, 43, 43);}
+</string>
    </property>
    <property name="text">
     <string>Sign in with Google OAuth</string>

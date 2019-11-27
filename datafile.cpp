@@ -13,3 +13,13 @@ void DataFile::setMd5(std::string md5) {
     this->md5 = md5;
 }
 
+void DataFile::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
+    QMenu menu;
+    QAction *deleteAct = menu.addAction("Delete");
+    connect(deleteAct, &QAction::triggered, this, &DataFile::DeleteFile);
+    menu.exec(event->screenPos());
+}
+
+void DataFile::DeleteFile() {
+    qDebug() << "delte!";
+}

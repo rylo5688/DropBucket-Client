@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     UISetUp();
+    deleteAct = new QAction(tr("&Delete"), this);
+    connect(deleteAct, &QAction::triggered, this, &MainWindow::deleteFile);
 }
 
 MainWindow::~MainWindow()
@@ -16,12 +18,13 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void SetupButtonIcon(QPushButton *button, std::string path) {
+void MainWindow::SetSyncButtonIcon(QString path) {
     qDebug() << "Setting up button icon";
-    QPixmap pixmap(QString::fromStdString(path));
+    QPushButton *syncButton = ui->syncButton;
+    QPixmap pixmap(path);
     QIcon ButtonIcon(pixmap);
-    button->setIcon(ButtonIcon);
-    button->setIconSize(pixmap.size());
+    syncButton->setIcon(ButtonIcon);
+    syncButton->setIconSize(QSize(32,32));
 }
 
 /**
@@ -40,22 +43,46 @@ void MainWindow::UISetUp() {
 
     filePathLabel = ui->pwdLabel;
     filePathLabel->setText("/DropBucket/"); // Place holder
-//    QPushButton *syncButton = ui->syncButton;
 
-//    SetupButtonIcon(syncButton, ":/icons/icon_sync.png");
+    setWindowTitle(tr("DropBucket"));
+
+    sync_ = new SyncOn();
+    syncStatus_ = true;
+    SetSyncButtonIcon(":/icons/icon_sync.png");
+    sync_->WatchDirectory("F:\\School\\4thYearSem1\\CSCI 4448 - OOAD\\DropBucket\\Test-Dir");
+    connect(sync_, &SyncOn::CompareDirectory, fileExplorerScene, &FileExplorerScene::CompareDirectory);
     qDebug() << ui->fileGraphicsView->size();
+}
+
+void MainWindow::SetState(Sync *state) {
+    sync_ = state;
 }
 
 void MainWindow::UpdateDirectoryLabel(QString label) {
     filePathLabel->setText(label);
 }
 
+void MainWindow::deleteFile() {
+    qDebug() << "file";
+}
+
 void MainWindow::on_syncButton_clicked() {
     qDebug() << "Sync button clicked";
-    // TODO - Sync State implemented
-    // Want to change the state based on click
-
-    // Update the icon to reflect the current state
+    delete sync_;
+    if(syncStatus_) {
+        qDebug() << "sync off";
+        sync_ = new SyncOff();
+        SetSyncButtonIcon(":/icons/icon_nosync.png");
+    }
+    else {
+        qDebug() << "sync on";
+        sync_ = new SyncOn();
+        SetSyncButtonIcon(":/icons/icon_sync.png");
+        // Add directory paths
+        qDebug() << fileExplorerScene->getDirectoryKeys();
+        sync_->WatchDirectory("F:\\School\\4thYearSem1\\CSCI 4448 - OOAD\\DropBucket\\Test-Dir");
+    }
+    syncStatus_ = !syncStatus_;
 }
 
 void MainWindow::on_returnButton_clicked() {

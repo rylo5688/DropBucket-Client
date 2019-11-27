@@ -1,6 +1,7 @@
 #ifndef FILEEXPLORERSCENE_H
 #define FILEEXPLORERSCENE_H
 
+#include <QMenu>
 #include <QObject>
 #include <QGraphicsScene>
 #include <QMimeData>
@@ -52,11 +53,16 @@ public:
 
     int getDirectoryMapSize() { return directoryMap_.size(); }
 
+    QStringList getDirectoryKeys();
+
 signals:
     void UpdateDirectoryLabel(QString label);
 
 public slots:
     void AddFile(QString filePath, std::string Md5);
+
+    void CompareDirectory(QFileInfoList files);
+
 
 private:
 

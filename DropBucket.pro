@@ -26,6 +26,7 @@ SOURCES += \
     main.cpp \
     maintest.cpp \
     mainwindow.cpp \
+    networkmanager.cpp \
     profiledialog.cpp \
     simpledirectoryfactory.cpp \
     sync.cpp \
@@ -41,6 +42,7 @@ HEADERS += \
     logindialog.h \
     maintest.h \
     mainwindow.h \
+    networkmanager.h \
     profiledialog.h \
     simpledirectoryfactory.h \
     sync.h \

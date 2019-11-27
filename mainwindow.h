@@ -3,9 +3,13 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QMenu>
+#include <QContextMenuEvent>
 #include "fileexplorerscene.h"
 #include "logindialog.h"
 #include "sync.h"
+#include "syncon.h"
+#include "syncoff.h"
 #include "uploaddialog.h"
 
 QT_BEGIN_NAMESPACE
@@ -22,7 +26,12 @@ public:
 
     void UISetUp();
 
+    void SetSyncButtonIcon(QString path);
+
 private:
+
+    void SetState(Sync* state);
+
     Ui::MainWindow *ui;
 
     FileExplorerScene *fileExplorerScene;
@@ -37,6 +46,10 @@ private:
 
     Sync* sync_;
 
+    bool syncStatus_;
+
+    QAction *deleteAct;
+
 private slots:
     void on_uploadButton_clicked();
 
@@ -47,5 +60,7 @@ private slots:
     void on_returnButton_clicked();
 
     void UpdateDirectoryLabel(QString label);
+
+    void deleteFile();
 };
 #endif // MAINWINDOW_H
