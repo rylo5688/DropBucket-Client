@@ -13,17 +13,27 @@ class NetworkManager : public QObject
 public:
     NetworkManager();
 
+    void Put(QFile *toPut);
+
+    void Post(QFile *toPost);
+
+    void Get();
+
+    void Delete(QFile* toDelete);
+
 private slots:
     void connected();
     void disconnected();
     void readJson();
     void handleError(QAbstractSocket::SocketError socketError);
 
+    void onManagerFinished(QNetworkReply *reply);
+
 private:
     QTcpSocket* socket_;
     QUrl url;
     QNetworkAccessManager manager_;
-    QNetworkRequest request_;
+//    QNetworkRequest request_;
     QNetworkReply *reply_;
     QFile *file;
     bool httpRequestAborted_;

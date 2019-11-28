@@ -16,8 +16,35 @@ NetworkManager::NetworkManager()
     socket_->connectToHost("localhost", 12000); // Need host name, port
     socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
-    in.setDevice(socket_);
-    in.setVersion(QDataStream::Qt_5_0);
+    connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onManagerFinished);
+
+//    in.setDevice(socket_);
+//    in.setVersion(QDataStream::Qt_5_0);
+}
+
+void NetworkManager::Put(QFile *toPut) {
+    QNetworkRequest request(url); // replace with put url
+    if(toPut->open(QIODevice::ReadOnly)) {
+        QByteArray ba = toPut->readAll();
+        manager_.put(request, ba);
+    }
+}
+
+void NetworkManager::Post(QFile *toPost) {
+    QNetworkRequest request(url); // replace w/ post url
+    if(toPost->open(QIODevice::ReadOnly)) {
+        QByteArray ba = toPost->readAll();
+        manager_.post(request, ba);
+    }
+}
+
+void NetworkManager::Get() {
+
+}
+
+void NetworkManager::Delete(QFile *toDelete) {
+    QNetworkRequest request(url); // replace URL w/ path to the file going to be deleted
+    manager_.deleteResource(request);
 }
 
 void NetworkManager::connected() {
@@ -45,4 +72,14 @@ void NetworkManager::readJson() {
 
 void NetworkManager::handleError(QAbstractSocket::SocketError socketError) {
     qDebug() << socketError;
+}
+
+void NetworkManager::onManagerFinished(QNetworkReply *reply) {
+    qDebug() << reply;
+    QVariant status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+        status_code.is_valid(){
+            // Print or catch the status code
+            QString status = status_code.toString(); // or status_code.toInt();
+            qDebug() << status;
+        }
 }
