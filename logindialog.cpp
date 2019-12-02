@@ -3,6 +3,7 @@
 #include "networkmanager.h"
 
 #include <QOAuth2AuthorizationCodeFlow>
+#include "networkmanager.h"
 
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent),
@@ -27,7 +28,9 @@ void LoginDialog::on_signInButton_clicked()
     qDebug() << password;
 
     QString data = QString("{\"username\":\"%1\",\"password\":\"%2\"}").arg(username, password);
-
+    QFile file;
+    file.write(data.toUtf8());
     NetworkManager* nMgr = new NetworkManager;
-    nMgr->post("http://localhost:8080/users/", data.toUtf8()); // Needs to be changed to https
+
+    nMgr->Post(&file);
 }

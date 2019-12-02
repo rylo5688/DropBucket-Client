@@ -17,7 +17,7 @@ NetworkManager::NetworkManager()
     socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onManagerFinished);
-
+    url = "http://localhost:8080/users/";
 //    in.setDevice(socket_);
 //    in.setVersion(QDataStream::Qt_5_0);
 }
@@ -47,10 +47,18 @@ void NetworkManager::Delete(QFile *toDelete) {
     manager_.deleteResource(request);
 }
 
+/**
+ * @brief NetworkManager::connected
+ * Called when TCP socket connection is successful
+ */
 void NetworkManager::connected() {
     qDebug() << "connceted";
 }
 
+/**
+ * @brief NetworkManager::disconnected
+ * Called when TCP socket is disconnected
+ */
 void NetworkManager::disconnected() {
     qDebug() << "disconnected";
 }
