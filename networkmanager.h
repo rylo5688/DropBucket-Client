@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QDataStream>
+#include <QNetworkReply>
+#include <QVariant>
 #include <QNetworkAccessManager>
 #include <QFile>
 
@@ -11,15 +13,15 @@ class NetworkManager : public QObject
 {
     Q_OBJECT
 public:
-    NetworkManager();
+    void Put(QString urlSuffix, QFile *toPut);
 
-    void Put(QFile *toPut);
+    void Post(QString urlSuffix, QByteArray *toPost);
 
-    void Post(QFile *toPost);
+    void Get(QString urlSuffix);
 
-    void Get();
+    void Delete(QString urlSuffix, QFile* toDelete);
 
-    void Delete(QFile* toDelete);
+    static NetworkManager* getInstance();
 
 private slots:
     void connected();
@@ -30,8 +32,13 @@ private slots:
     void onManagerFinished(QNetworkReply *reply);
 
 private:
+    // Singleton: https://gist.github.com/pazdera/1098119
+    NetworkManager();
+
+    static NetworkManager* instance_;
+
     QTcpSocket* socket_;
-    QUrl url;
+    QString url;
     QNetworkAccessManager manager_;
 //    QNetworkRequest request_;
     QNetworkReply *reply_;

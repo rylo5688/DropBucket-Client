@@ -28,6 +28,7 @@ SOURCES += \
     mainwindow.cpp \
     networkmanager.cpp \
     profiledialog.cpp \
+    signupdialog.cpp \
     simpledirectoryfactory.cpp \
     sync.cpp \
     syncoff.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     mainwindow.h \
     networkmanager.h \
     profiledialog.h \
+    signupdialog.h \
     simpledirectoryfactory.h \
     sync.h \
     syncoff.h \
@@ -54,6 +56,7 @@ FORMS += \
     logindialog.ui \
     mainwindow.ui \
     profiledialog.ui \
+    signupdialog.ui \
     uploaddialog.ui
 
 # Default rules for deployment.

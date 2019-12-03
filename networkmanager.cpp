@@ -6,6 +6,8 @@
  * HTTP example - https://code.qt.io/cgit/qt/qtbase.git/tree/examples/network/http?h=5.13
  */
 
+NetworkManager* NetworkManager::instance_ = nullptr;
+
 NetworkManager::NetworkManager()
 {
     socket_ = new QTcpSocket;
@@ -17,33 +19,51 @@ NetworkManager::NetworkManager()
     socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onManagerFinished);
-    url = "http://localhost:8080/users/";
+    url = "http://localhost:5000";
 //    in.setDevice(socket_);
 //    in.setVersion(QDataStream::Qt_5_0);
 }
 
-void NetworkManager::Put(QFile *toPut) {
-    QNetworkRequest request(url); // replace with put url
+NetworkManager* NetworkManager::getInstance() {
+    if(instance_ == nullptr) {
+        // Lazy instantiation
+        instance_ = new NetworkManager;
+    }
+
+    return instance_;
+}
+
+void NetworkManager::Put(QString urlSuffix, QFile *toPut) {
+    QUrl putUrl = url + urlSuffix;
+    QNetworkRequest request(putUrl); // replace with put url
     if(toPut->open(QIODevice::ReadOnly)) {
         QByteArray ba = toPut->readAll();
         manager_.put(request, ba);
     }
 }
 
-void NetworkManager::Post(QFile *toPost) {
-    QNetworkRequest request(url); // replace w/ post url
-    if(toPost->open(QIODevice::ReadOnly)) {
-        QByteArray ba = toPost->readAll();
-        manager_.post(request, ba);
-    }
+void NetworkManager::Post(QString urlSuffix, QByteArray *toPost) {
+    qDebug() << "Post!";
+    QUrl postUrl = url + urlSuffix;
+    qDebug() << postUrl;
+    QNetworkRequest request(postUrl); // replace w/ post url
+    request.setHeader(QNetworkRequest::ContentLengthHeader, toPost->length()); // TODO
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    manager_.post(request, *toPost);
+//    if(toPost->open(QIODevice::ReadOnly)) {
+//        qDebug() << "File opened!";
+//        QByteArray ba = toPost->readAll();
+
+//    }
 }
 
-void NetworkManager::Get() {
-
+void NetworkManager::Get(QString urlSuffix) {
+    QUrl getUrl = url + urlSuffix;
 }
 
-void NetworkManager::Delete(QFile *toDelete) {
-    QNetworkRequest request(url); // replace URL w/ path to the file going to be deleted
+void NetworkManager::Delete(QString urlSuffix, QFile *toDelete) {
+    QUrl deleteUrl = url + urlSuffix;
+    QNetworkRequest request(deleteUrl); // replace URL w/ path to the file going to be deleted
     manager_.deleteResource(request);
 }
 
@@ -85,7 +105,7 @@ void NetworkManager::handleError(QAbstractSocket::SocketError socketError) {
 void NetworkManager::onManagerFinished(QNetworkReply *reply) {
     qDebug() << reply;
     QVariant status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
-        status_code.is_valid(){
+        if (status_code.isValid()) {
             // Print or catch the status code
             QString status = status_code.toString(); // or status_code.toInt();
             qDebug() << status;

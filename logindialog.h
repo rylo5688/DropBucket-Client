@@ -3,6 +3,8 @@
 
 #include <QDialog>
 #include <QDebug>
+#include <QSysInfo>
+#include "signupdialog.h"
 
 namespace Ui {
 class LoginDialog;
@@ -19,8 +21,12 @@ public:
 private slots:
     void on_signInButton_clicked();
 
+    void on_signInButton_2_clicked();
+
 private:
     Ui::LoginDialog *ui;
+
+    SignUpDialog* signup_;
 };
 
 #endif // LOGINDIALOG_H

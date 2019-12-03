@@ -27,10 +27,20 @@ void LoginDialog::on_signInButton_clicked()
     qDebug() << username;
     qDebug() << password;
 
-    QString data = QString("{\"username\":\"%1\",\"password\":\"%2\"}").arg(username, password);
-    QFile file;
-    file.write(data.toUtf8());
-    NetworkManager* nMgr = new NetworkManager;
+    QByteArray id = QSysInfo::machineUniqueId();
+    QString data = QString("{\"Username\":\"%1\",\"Password\":\"%2\",\"Deviceid\":\"%3\"}").arg(username, password, id);
+//    QFile file;
+    qDebug() << data;
+    QByteArray toPost = data.toUtf8();
+    NetworkManager* nMgr = NetworkManager::getInstance();
 
-    nMgr->Post(&file);
+    nMgr->Post("/users/signin", &toPost);
+}
+
+void LoginDialog::on_signInButton_2_clicked()
+{
+    qDebug() << "sign up clicked";
+    signup_ = new SignUpDialog;
+    signup_->show();
+    this->close();
 }

@@ -146,7 +146,7 @@ bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
  */
 void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
     std::map<QString, Directory*>::iterator mapIt;
-    QJsonArray files = json["Files"].toArray();
+    QJsonArray files = json["FileSystemObject"].toArray();
     QJsonArray::iterator it;
     for(it = files.begin(); it != files.end(); it++) {
         QJsonObject currFile = (*it).toObject();

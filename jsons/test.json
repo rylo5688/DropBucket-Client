@@ -1,5 +1,5 @@
 {
-        "Files": [{
+        "FileSystemObject": [{
 		"test1.txt": {
 			"relativePath": "/DropBucket/",
 			"md5": "fndalijkp34"

@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     MainWindow w;
     qDebug() << QDir::homePath();
-    NetworkManager n;
+    NetworkManager *n = NetworkManager::getInstance(); // init for testing
     w.show();
     return a.exec();
 }

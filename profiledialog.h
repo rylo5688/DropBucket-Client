@@ -2,6 +2,8 @@
 #define PROFILEDIALOG_H
 
 #include <QDialog>
+#include <QDebug>
+#include "networkmanager.h"
 
 namespace Ui {
 class ProfileDialog;
@@ -14,6 +16,9 @@ class ProfileDialog : public QDialog
 public:
     explicit ProfileDialog(QWidget *parent = nullptr);
     ~ProfileDialog();
+
+private slots:
+
 
 private:
     Ui::ProfileDialog *ui;
