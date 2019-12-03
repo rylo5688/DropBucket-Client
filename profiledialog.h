@@ -18,7 +18,7 @@ public:
     ~ProfileDialog();
 
 private slots:
-
+    void on_signOutButton_clicked();
 
 private:
     Ui::ProfileDialog *ui;
