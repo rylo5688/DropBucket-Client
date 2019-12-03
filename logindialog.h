@@ -23,6 +23,9 @@ private slots:
 
     void on_signInButton_2_clicked();
 
+signals:
+    void SetUserInfo(QString username, QString password);
+
 private:
     Ui::LoginDialog *ui;
 

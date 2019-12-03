@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDebug>
 #include "networkmanager.h"
+#include "mainwindow.h"
 
 namespace Ui {
 class ProfileDialog;
@@ -18,7 +19,7 @@ public:
     ~ProfileDialog();
 
 private slots:
-
+    void on_signOutButton_clicked();
 
 private:
     Ui::ProfileDialog *ui;

@@ -15,11 +15,15 @@
 #include <QUrl>
 #include <QDir>
 #include <QGraphicsSceneMouseEvent>
+#include <QStandardPaths>
 #include <QCryptographicHash>
+#include <QDirIterator>
 #include <queue>
 #include "directory.h"
 #include "datafile.h"
 #include "simpledirectoryfactory.h"
+
+// JSON stuff: https://doc.qt.io/qt-5/qtcore-serialization-savegame-example.html
 
 class FileExplorerScene : public QGraphicsScene
 {
@@ -54,6 +58,8 @@ public:
     int getDirectoryMapSize() { return directoryMap_.size(); }
 
     QStringList getDirectoryKeys();
+
+    QJsonDocument DirectoryToJson();
 
 signals:
     void UpdateDirectoryLabel(QString label);

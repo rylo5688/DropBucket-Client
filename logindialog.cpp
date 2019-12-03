@@ -34,7 +34,9 @@ void LoginDialog::on_signInButton_clicked()
     QByteArray toPost = data.toUtf8();
     NetworkManager* nMgr = NetworkManager::getInstance();
 
-    nMgr->Post("/users/signin", &toPost);
+    nMgr->SignInPost(&toPost);
+
+    SetUserInfo(username, password);
 }
 
 void LoginDialog::on_signInButton_2_clicked()

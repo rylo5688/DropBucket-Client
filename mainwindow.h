@@ -28,6 +28,10 @@ public:
 
     void SetSyncButtonIcon(QString path);
 
+    static QString username;
+
+    static QString password;
+
 private:
 
     void SetState(Sync* state);
@@ -62,5 +66,7 @@ private slots:
     void UpdateDirectoryLabel(QString label);
 
     void deleteFile();
+
+    void SetUserInfo(QString username, QString password);
 };
 #endif // MAINWINDOW_H

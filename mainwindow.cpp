@@ -3,6 +3,9 @@
 
 #include <QDebug>
 
+QString MainWindow::username = "";
+QString MainWindow::password = "";
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -19,7 +22,6 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::SetSyncButtonIcon(QString path) {
-    qDebug() << "Setting up button icon";
     QPushButton *syncButton = ui->syncButton;
     QPixmap pixmap(path);
     QIcon ButtonIcon(pixmap);
@@ -99,6 +101,11 @@ void MainWindow::on_uploadButton_clicked() {
 void MainWindow::on_profileButton_clicked() {
     // Start profile dialog
     qDebug() << "Profile button clicked";
+    connect(login_, &LoginDialog::SetUserInfo, this, &MainWindow::SetUserInfo);
     login_->show();
 }
 
+void MainWindow::SetUserInfo(QString username, QString password) {
+    this->username = username;
+    this->password = password;
+}

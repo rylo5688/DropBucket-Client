@@ -25,7 +25,7 @@ void SignUpDialog::on_signUpButton_clicked()
         QByteArray toPost = data.toUtf8();
         NetworkManager *nMgr = NetworkManager::getInstance();
 
-        nMgr->Post("/users/signup", &toPost);
+        nMgr->SignUpPost(&toPost);
     }
     else {
         QMessageBox msgBox;
