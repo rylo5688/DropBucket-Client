@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDebug>
 #include "networkmanager.h"
+#include "mainwindow.h"
 
 namespace Ui {
 class ProfileDialog;

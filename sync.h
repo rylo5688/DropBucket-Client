@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QFileSystemWatcher>
 #include <QFileInfoList>
+#include <QDir>
 //#include <QMainWindow>
 //#include "mainwindow.h"
 
@@ -13,9 +14,7 @@ class Sync : public QObject
 public:
     Sync();
 
-    virtual void WatchDirectory(QString dir) {}
-
-    virtual void WatchDirectories(QStringList dirsToAdd) {}
+    virtual void WatchDirectory(QDir dir) {}
 
     virtual void HandleSync() {}
 

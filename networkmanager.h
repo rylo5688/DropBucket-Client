@@ -7,21 +7,32 @@
 #include <QNetworkReply>
 #include <QVariant>
 #include <QNetworkAccessManager>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QFile>
 
 class NetworkManager : public QObject
 {
     Q_OBJECT
 public:
-    void Put(QString urlSuffix, QFile *toPut);
 
-    void Post(QString urlSuffix, QByteArray *toPost);
+    void SignInPost(QByteArray *toPost);
 
-    void Get(QString urlSuffix);
+    void SignUpPost(QByteArray *toPost);
+
+    void SignOutPost(QByteArray *toPost);
+
+    void GetFile(QString urlSuffix);
 
     void Delete(QString urlSuffix, QFile* toDelete);
 
     static NetworkManager* getInstance();
+
+signals:
+    void SignUpSuccessful();
+
+    void SignInSuccessful();
 
 private slots:
     void connected();
@@ -31,11 +42,19 @@ private slots:
 
     void onManagerFinished(QNetworkReply *reply);
 
+    void onSignInManagerFinished(QNetworkReply *reply);
+
+    void onSignUpManagerFinished(QNetworkReply *reply);
+
+    void onSignOutManagerFinished(QNetworkReply *reply);
+
 private:
-    // Singleton: https://gist.github.com/pazdera/1098119
+    // C++ Singleton: https://gist.github.com/pazdera/1098119
     NetworkManager();
 
     static NetworkManager* instance_;
+
+    void Post(QNetworkRequest *request, QByteArray *toPost);
 
     QTcpSocket* socket_;
     QString url;
@@ -44,7 +63,6 @@ private:
     QNetworkReply *reply_;
     QFile *file;
     bool httpRequestAborted_;
-    QDataStream in;
 };
 
 #endif // NETWORKMANAGER_H

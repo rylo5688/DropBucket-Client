@@ -5,8 +5,6 @@
  */
 FileExplorerScene::FileExplorerScene()
 {
-//    QPixmap pixmap("://icons/icon_file.png");
-//    addPixmap(pixmap);
     Q_INIT_RESOURCE(resources);
 
     curr_x_ = 0;
@@ -14,18 +12,58 @@ FileExplorerScene::FileExplorerScene()
 
     factory_ = new SimpleDirectoryFactory();
 
+
+    DirectoryToJson();
+}
+
+/**
+ * @brief FileExplorerScene::SignInSuccess
+ * TODO
+ * Replace with JSON from HTTP response, FileSystemObject
+ */
+void FileExplorerScene::SignInSuccess() {
     QJsonObject json = OpenReadJSON();
     CreateDirectoryComposite(json);
     LoadScene(root_dir_);
     curr_dir_ = root_dir_;
+}
 
-    /**
-    TODO
-    - Delete file menu - ask team
-    - Profile Dialog
-    - Start log in dialog on start up
-    */
+/**
+ * @brief FileExplorerScene::DirectoryToJson
+ * @return
+ */
+QJsonDocument FileExplorerScene::DirectoryToJson() {
+    qDebug() << "-----------Directory to JSON------------";
+    QString dropbucketDirPath = QDir::homePath() + "/Dropbucket/";
+    QDir dropbucketDir(dropbucketDirPath);
+    QDirIterator it(dropbucketDirPath, QStringList() << "*", QDir::Files, QDirIterator::Subdirectories);
+    QJsonArray array;
+    while(it.hasNext()) {
+        QJsonObject fileObj;
+        QJsonObject fileInfoObj;
+        QString filePath = it.next();
+        QFileInfo fi(filePath);
+        QFile file(filePath);
+        QByteArray md5;
+        if(file.open(QFile::ReadOnly)) {
+            md5 = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5);
+        }
+        QString relativePath = filePath;
+        relativePath.remove(0, dropbucketDirPath.length());
+        qDebug() << fi.fileName();
+        qDebug() << relativePath;
+        fileInfoObj.insert("relativePath", relativePath);
+        fileInfoObj.insert("md5", QString(md5));
+        fileObj.insert(fi.fileName(), fileInfoObj);
+        array.push_back(fileObj);
+    }
+    QJsonObject fileSystemObject;
+    fileSystemObject.insert("FileSystemObject", array);
+    QJsonDocument doc(fileSystemObject);
+    qDebug() << doc.toJson();
+    qDebug() << "----------------------------------------";
 
+    return doc;
 }
 
 /**
@@ -53,7 +91,6 @@ void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
     addItem(toAdd);
     curr_loaded_.push_back(toAdd);
 
-    qDebug() << curr_x_ << curr_y_;
     update();
 }
 
@@ -64,7 +101,6 @@ void FileExplorerScene::LoadCurrDirParent() {
     if(curr_dir_ != root_dir_) {
         Directory *toLoad = curr_dir_->getParent();
         if(toLoad != nullptr) {
-            qDebug() << "Loading parent";
             LoadScene(toLoad);
         }
     }
@@ -87,10 +123,7 @@ void FileExplorerScene::LoadScene(Directory* dir) {
     curr_dir_ = dir;
     curr_x_ = 0;
     curr_y_ = 0;
-    qDebug() << "cleared scen e, loading contents";
     std::vector<Directory*> contents = dir->getContents();
-    qDebug() << "Got contents";
-    qDebug() << contents.at(0);
     AddIcons(dir->getContents());
     UpdateDirectoryLabel(QString::fromStdString(dir->getRelativePath()));
     update();

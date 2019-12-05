@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QSysInfo>
 #include "signupdialog.h"
+#include "mainwindow.h"
 
 namespace Ui {
 class LoginDialog;
@@ -23,10 +24,19 @@ private slots:
 
     void on_signInButton_2_clicked();
 
+signals:
+    void SetUserInfo(QString username, QString password);
+
+    void LoadScene();
+
+private slots:
+    void SignInSuccessful();
+
 private:
     Ui::LoginDialog *ui;
 
     SignUpDialog* signup_;
+
 };
 
 #endif // LOGINDIALOG_H
