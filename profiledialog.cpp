@@ -1,5 +1,6 @@
 #include "profiledialog.h"
 #include "ui_profiledialog.h"
+#include "mainwindow.h"
 
 ProfileDialog::ProfileDialog(QWidget *parent) :
     QDialog(parent),
