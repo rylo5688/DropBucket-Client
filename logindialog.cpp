@@ -5,21 +5,31 @@
 #include <QOAuth2AuthorizationCodeFlow>
 #include "networkmanager.h"
 
+/**
+ * @brief LoginDialog::LoginDialog
+ * @param parent
+ */
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::LoginDialog)
 {
     ui->setupUi(this);
+    connect(NetworkManager::getInstance(), &NetworkManager::SignInSuccessful, this, &LoginDialog::SignInSuccessful);
 }
 
+/**
+ * @brief LoginDialog::~LoginDialog
+ */
 LoginDialog::~LoginDialog()
 {
     delete ui;
 }
 
+/**
+ * @brief LoginDialog::on_signInButton_clicked
+ */
 void LoginDialog::on_signInButton_clicked()
 {
-    // PUT LOGIN STUFF HERE
     const QString username = ui->emailLineEdit->text();
     const QString password = ui->passwordLineEdit->text();
 
@@ -28,8 +38,7 @@ void LoginDialog::on_signInButton_clicked()
     qDebug() << password;
 
     QByteArray id = QSysInfo::machineUniqueId();
-    QString data = QString("{\"Username\":\"%1\",\"Password\":\"%2\",\"Deviceid\":\"%3\"}").arg(username, password, id);
-//    QFile file;
+    QString data = QString("{\"username\":\"%1\",\"password\":\"%2\",\"device_id\":\"%3\"}").arg(username, password, id);
     qDebug() << data;
     QByteArray toPost = data.toUtf8();
     NetworkManager* nMgr = NetworkManager::getInstance();
@@ -37,12 +46,25 @@ void LoginDialog::on_signInButton_clicked()
     nMgr->SignInPost(&toPost);
 
     SetUserInfo(username, password);
+    LoadScene();
 }
 
+/**
+ * @brief LoginDialog::on_signInButton_2_clicked
+ */
 void LoginDialog::on_signInButton_2_clicked()
 {
-    qDebug() << "sign up clicked";
     signup_ = new SignUpDialog;
     signup_->show();
+}
+
+/**
+ * @brief LoginDialog::SignInSuccessful
+ * Notifies the user the sign in was a success, closes dialog.
+ */
+void LoginDialog::SignInSuccessful() {
+    QMessageBox msgBox;
+    msgBox.setText("Sign in successful!");
+    msgBox.exec();
     this->close();
 }

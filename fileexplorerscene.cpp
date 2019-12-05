@@ -12,13 +12,26 @@ FileExplorerScene::FileExplorerScene()
 
     factory_ = new SimpleDirectoryFactory();
 
+
+    DirectoryToJson();
+}
+
+/**
+ * @brief FileExplorerScene::SignInSuccess
+ * TODO
+ * Replace with JSON from HTTP response, FileSystemObject
+ */
+void FileExplorerScene::SignInSuccess() {
     QJsonObject json = OpenReadJSON();
     CreateDirectoryComposite(json);
     LoadScene(root_dir_);
     curr_dir_ = root_dir_;
-    DirectoryToJson();
 }
 
+/**
+ * @brief FileExplorerScene::DirectoryToJson
+ * @return
+ */
 QJsonDocument FileExplorerScene::DirectoryToJson() {
     qDebug() << "-----------Directory to JSON------------";
     QString dropbucketDirPath = QDir::homePath() + "/Dropbucket/";
@@ -110,10 +123,7 @@ void FileExplorerScene::LoadScene(Directory* dir) {
     curr_dir_ = dir;
     curr_x_ = 0;
     curr_y_ = 0;
-    qDebug() << "cleared scene, loading contents";
     std::vector<Directory*> contents = dir->getContents();
-    qDebug() << "Got contents";
-    qDebug() << contents.at(0);
     AddIcons(dir->getContents());
     UpdateDirectoryLabel(QString::fromStdString(dir->getRelativePath()));
     update();

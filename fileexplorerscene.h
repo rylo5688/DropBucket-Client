@@ -33,6 +33,8 @@ public:
 
     void LoadCurrDirParent();
 
+    void SignInSuccess();
+
     void LoadScene(Directory* dir); // function to load all the icons of the current directory
 
     QString GetMimeType(const QMimeData *inData);

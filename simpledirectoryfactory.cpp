@@ -1,11 +1,16 @@
 #include "simpledirectoryfactory.h"
 
-SimpleDirectoryFactory::SimpleDirectoryFactory()
-{
+SimpleDirectoryFactory::SimpleDirectoryFactory(){}
 
-}
-
-
+/**
+ * @brief SimpleDirectoryFactory::createDir
+ * @param x
+ * @param y
+ * @param type
+ * @param name
+ * @param md5
+ * @return
+ */
 Directory* SimpleDirectoryFactory::createDir(int x, int y, std::string type, std::string name, std::string md5) {
     if(type == "file") {
         // Create data file

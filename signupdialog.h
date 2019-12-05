@@ -21,6 +21,8 @@ public:
 private slots:
     void on_signUpButton_clicked();
 
+    void SignUpSuccessful();
+
 private:
     Ui::SignUpDialog *ui;
 };

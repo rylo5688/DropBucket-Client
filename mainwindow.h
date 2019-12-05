@@ -7,6 +7,7 @@
 #include <QContextMenuEvent>
 #include "fileexplorerscene.h"
 #include "logindialog.h"
+#include "profiledialog.h"
 #include "sync.h"
 #include "syncon.h"
 #include "syncoff.h"
@@ -36,6 +37,8 @@ private:
 
     void SetState(Sync* state);
 
+    QDir homeDir_;
+
     Ui::MainWindow *ui;
 
     FileExplorerScene *fileExplorerScene;
@@ -44,7 +47,7 @@ private:
 
     std::string currentDirectory;
 
-    LoginDialog* login_;
+    ProfileDialog* profile_;
 
     UploadDialog* upload_;
 
@@ -67,6 +70,9 @@ private slots:
 
     void deleteFile();
 
+public slots:
     void SetUserInfo(QString username, QString password);
+
+    void SignInSuccessful();
 };
 #endif // MAINWINDOW_H

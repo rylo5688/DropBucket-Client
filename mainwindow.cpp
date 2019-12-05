@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    homeDir_ = QDir::homePath() + "/Dropbucket";
     UISetUp();
     deleteAct = new QAction(tr("&Delete"), this);
     connect(deleteAct, &QAction::triggered, this, &MainWindow::deleteFile);
@@ -33,7 +34,7 @@ void MainWindow::SetSyncButtonIcon(QString path) {
  * Function to setup the folder structure.
  */
 void MainWindow::UISetUp() {
-    login_ = new LoginDialog(this);
+    profile_ = new ProfileDialog(this);
     upload_ = new UploadDialog(this);
     fileExplorerScene = new FileExplorerScene;
     fileExplorerScene->setSceneRect(0,0,ui->fileGraphicsView->size().width(), ui->fileGraphicsView->size().height());
@@ -51,23 +52,37 @@ void MainWindow::UISetUp() {
     sync_ = new SyncOn();
     syncStatus_ = true;
     SetSyncButtonIcon(":/icons/icon_sync.png");
-    sync_->WatchDirectory("F:\\School\\4thYearSem1\\CSCI 4448 - OOAD\\DropBucket\\Test-Dir");
+
+    sync_->WatchDirectory(homeDir_);
     connect(sync_, &SyncOn::CompareDirectory, fileExplorerScene, &FileExplorerScene::CompareDirectory);
-    qDebug() << ui->fileGraphicsView->size();
 }
 
+/**
+ * @brief MainWindow::SetState
+ * @param state
+ */
 void MainWindow::SetState(Sync *state) {
     sync_ = state;
 }
 
+/**
+ * @brief MainWindow::UpdateDirectoryLabel
+ * @param label
+ */
 void MainWindow::UpdateDirectoryLabel(QString label) {
     filePathLabel->setText(label);
 }
 
+/**
+ * @brief MainWindow::deleteFile
+ */
 void MainWindow::deleteFile() {
     qDebug() << "file";
 }
 
+/**
+ * @brief MainWindow::on_syncButton_clicked
+ */
 void MainWindow::on_syncButton_clicked() {
     qDebug() << "Sync button clicked";
     delete sync_;
@@ -82,30 +97,50 @@ void MainWindow::on_syncButton_clicked() {
         SetSyncButtonIcon(":/icons/icon_sync.png");
         // Add directory paths
         qDebug() << fileExplorerScene->getDirectoryKeys();
-        sync_->WatchDirectory("F:\\School\\4thYearSem1\\CSCI 4448 - OOAD\\DropBucket\\Test-Dir");
+        sync_->WatchDirectory(homeDir_);
     }
     syncStatus_ = !syncStatus_;
 }
 
+/**
+ * @brief MainWindow::on_returnButton_clicked
+ */
 void MainWindow::on_returnButton_clicked() {
     qDebug() << "Return button clicked";
     fileExplorerScene->LoadCurrDirParent();
 }
 
+/**
+ * @brief MainWindow::on_uploadButton_clicked
+ */
 void MainWindow::on_uploadButton_clicked() {
     // Start upload dialog
     qDebug() << "Upload button clicked";
     upload_->show();
 }
 
+/**
+ * @brief MainWindow::on_profileButton_clicked
+ */
 void MainWindow::on_profileButton_clicked() {
     // Start profile dialog
     qDebug() << "Profile button clicked";
-    connect(login_, &LoginDialog::SetUserInfo, this, &MainWindow::SetUserInfo);
-    login_->show();
+    profile_->show();
 }
 
+/**
+ * @brief MainWindow::SetUserInfo
+ * @param username
+ * @param password
+ */
 void MainWindow::SetUserInfo(QString username, QString password) {
     this->username = username;
     this->password = password;
+}
+
+/**
+ * @brief MainWindow::SignInSuccessful
+ */
+void MainWindow::SignInSuccessful() {
+    fileExplorerScene->SignInSuccess();
 }

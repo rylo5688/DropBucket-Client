@@ -29,6 +29,11 @@ public:
 
     static NetworkManager* getInstance();
 
+signals:
+    void SignUpSuccessful();
+
+    void SignInSuccessful();
+
 private slots:
     void connected();
     void disconnected();
@@ -49,7 +54,7 @@ private:
 
     static NetworkManager* instance_;
 
-    void Post(QNetworkAccessManager *manager, QNetworkRequest *request, QByteArray *toPost);
+    void Post(QNetworkRequest *request, QByteArray *toPost);
 
     QTcpSocket* socket_;
     QString url;
@@ -58,7 +63,6 @@ private:
     QNetworkReply *reply_;
     QFile *file;
     bool httpRequestAborted_;
-    QDataStream in;
 };
 
 #endif // NETWORKMANAGER_H
