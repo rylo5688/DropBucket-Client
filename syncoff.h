@@ -12,7 +12,7 @@ class SyncOff : public Sync
 public:
     SyncOff();
 
-    void HandleSync() override {}
+//    void HandleSync(QJsonDocument directoryJson) override {}
 
 };
 

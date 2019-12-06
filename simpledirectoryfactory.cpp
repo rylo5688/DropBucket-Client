@@ -11,7 +11,7 @@ SimpleDirectoryFactory::SimpleDirectoryFactory(){}
  * @param md5
  * @return
  */
-Directory* SimpleDirectoryFactory::createDir(int x, int y, std::string type, std::string name, std::string md5) {
+Directory* SimpleDirectoryFactory::createDir(int x, int y, QString type, QString name, QString md5) {
     if(type == "file") {
         // Create data file
         QPixmap pixmap("://icons/icon_file.png");

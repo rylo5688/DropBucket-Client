@@ -19,9 +19,10 @@ public:
 
     void WatchFile(QString fileName);
 
-    void HandleSync() override;
-
     ~SyncOn() override;
+
+public slots:
+    void HandleSync(QJsonDocument directoryJson) override;
 
 private slots:
     void DirChanged(const QString &path);

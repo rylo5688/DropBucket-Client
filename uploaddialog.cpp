@@ -24,7 +24,7 @@ void UploadDialog::on_uploadButton_clicked()
         }
         QByteArray data = file.readAll();
         QByteArray md5 = QCryptographicHash::hash(data, QCryptographicHash::Md5);
-        std::string Md5 = QString(md5).toStdString();
+        QString Md5 = md5.toHex();
         UploadFile(uploadedFile_, Md5);
 
         close();

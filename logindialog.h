@@ -25,7 +25,9 @@ private slots:
     void on_signInButton_2_clicked();
 
 signals:
-    void SetUserInfo(QString username, QString password);
+    void SetUsername(QString username);
+
+    void SetPassword(QString password);
 
     void LoadScene();
 

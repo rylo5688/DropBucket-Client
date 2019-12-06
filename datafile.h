@@ -19,9 +19,9 @@ public:
 
     DataFile(int x, int y, QPixmap pixmap, QGraphicsItem *parent = nullptr);
 
-    std::string getMd5() const;
+    QString getMd5() const;
 
-    void setMd5(std::string md5);
+    void setMd5(QString md5);
 
     void contextMenuEvent(QGraphicsSceneContextMenuEvent * event) override;
 
@@ -29,7 +29,7 @@ private slots:
     void DeleteFile();
 
 private:
-    std::string md5;
+    QString md5; // Will be hex
 
 };
 

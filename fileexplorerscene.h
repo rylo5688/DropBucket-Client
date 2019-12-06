@@ -22,6 +22,7 @@
 #include "directory.h"
 #include "datafile.h"
 #include "simpledirectoryfactory.h"
+#include "networkmanager.h"
 
 // JSON stuff: https://doc.qt.io/qt-5/qtcore-serialization-savegame-example.html
 
@@ -32,8 +33,6 @@ public:
     FileExplorerScene();
 
     void LoadCurrDirParent();
-
-    void SignInSuccess();
 
     void LoadScene(Directory* dir); // function to load all the icons of the current directory
 
@@ -55,7 +54,7 @@ public:
 
     QJsonObject OpenReadJSON();
 
-    void CreateDirectoryComposite(QJsonObject &json);
+    void CreateDirectoryComposite(QJsonArray directoriesArray, QJsonArray filesArray);
 
     int getDirectoryMapSize() { return directoryMap_.size(); }
 
@@ -66,11 +65,14 @@ public:
 signals:
     void UpdateDirectoryLabel(QString label);
 
+    void HandleSync(QJsonDocument directoryJson);
+
 public slots:
-    void AddFile(QString filePath, std::string Md5);
+    void AddFile(QString filePath, QString Md5);
 
     void CompareDirectory(QFileInfoList files);
 
+    void SignInSuccess(QJsonArray directoriesArray, QJsonArray filesArray);
 
 private:
 

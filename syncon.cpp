@@ -25,16 +25,16 @@ void SyncOn::WatchDirectory(QDir dir) {
 //        qDebug() << it.next();
         QString path = it.next();
         QStringList list = path.split("/", QString::SkipEmptyParts);
-        qDebug() << list;
+//        qDebug() << list;
         if(!list.isEmpty() && (!list.last().compare(".") || !list.last().compare(".."))) {
-            qDebug() << list.last();
+//            qDebug() << list.last();
 //            watcher_->addPath(it.next());
         }
         else {
-            qDebug() << "Here";
+//            qDebug() << "Here";
             toAdd.append(path);
         }
-        qDebug() << "----";
+//        qDebug() << "----";
     }
     watcher_->addPaths(toAdd);
 
@@ -65,7 +65,9 @@ void SyncOn::FileChanged(const QString &path) {
     qDebug() << "File changed:" << path;
 }
 
-void SyncOn::HandleSync() {}
+void SyncOn::HandleSync(QJsonDocument directoryJson) {
+    qDebug() << directoryJson;
+}
 
 SyncOn::~SyncOn() {
     delete watcher_;

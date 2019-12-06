@@ -95,12 +95,75 @@ void NetworkManager::SignOutPost(QByteArray *toPost) {
     Post(&request, toPost);
 }
 
+void NetworkManager::FilePost(QString filePath, QString DirectoryAddedTo) {
+    qDebug() << DirectoryAddedTo;
+    connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
+    QUrl postUrl = url + "/file/";
+    QNetworkRequest request(postUrl);
+
+    QString dropbucketDirPath = QDir::homePath() + "/Dropbucket/";
+
+    QStringList splitPath = filePath.split("/", QString::SkipEmptyParts);
+    QString newFilePath = dropbucketDirPath + DirectoryAddedTo + splitPath[splitPath.size() - 1];
+    QString relativePath = newFilePath;
+    relativePath.remove(0, dropbucketDirPath.length());
+
+    QFile fileToSave(newFilePath);
+    QFile file(filePath);
+    QByteArray data;
+    QByteArray imageFormat = QImageReader::imageFormat(filePath);
+    qDebug() << "image format: " << imageFormat;
+    if(imageFormat == "png" || imageFormat == "jpeg") {
+        QImage image(filePath);
+        QBuffer buff(&data);
+        buff.open(QIODevice::WriteOnly);
+        if(imageFormat == "png") {
+            image.save(&buff, "PNG");
+        }
+        else if(imageFormat == "jpeg") {
+            image.save(&buff, "JPG");
+        }
+        qDebug() << "Data: " << data;
+    }
+    else {
+        if(file.open(QIODevice::ReadOnly)) {
+            data = file.readAll();
+            qDebug () << "file opened";
+            qDebug() << "Data: " << data.constData();
+        }
+        else {
+            qDebug() << "file not opened";
+        }
+    }
+
+    fileToSave.open(QIODevice::WriteOnly);
+    fileToSave.write(data);
+    fileToSave.close();
+
+    QJsonObject postJson;
+
+    postJson.insert("file", data.constData());
+    postJson.insert("relative_path", relativePath);
+    postJson.insert("device_id", QString(QSysInfo::machineUniqueId()));
+//    postJson.insert("user_id", userid_);
+
+    QByteArray toPost;
+    QJsonDocument doc(postJson);
+    qDebug() << doc.toJson();
+    QByteArray json = doc.toJson();
+    Post(&request, &json);
+}
+
 /**
  * @brief NetworkManager::GetFile
  * @param urlSuffix
  */
-void NetworkManager::GetFile(QString urlSuffix) {
-    QUrl getUrl = url + urlSuffix;
+void NetworkManager::FileGet(QString filePath) {
+    connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onGetFileManagerFinished);
+    QUrl getUrl = url + "/file/?relative_path=" + "abc.png";
+    qDebug() << getUrl;
+    QNetworkRequest request(getUrl);
+    manager_.get(request);
 }
 
 /**
@@ -108,34 +171,10 @@ void NetworkManager::GetFile(QString urlSuffix) {
  * @param urlSuffix
  * @param toDelete
  */
-void NetworkManager::Delete(QString urlSuffix, QFile *toDelete) {
-    QUrl deleteUrl = url + urlSuffix;
+void NetworkManager::FileDelete(QString filePath) {
+    QUrl deleteUrl = url;
     QNetworkRequest request(deleteUrl); // replace URL w/ path to the file going to be deleted
 //    manager.deleteResource(request);
-}
-
-/**
- * @brief NetworkManager::connected
- * Called when TCP socket connection is successful
- */
-void NetworkManager::connected() {
-    qDebug() << "connceted";
-}
-
-/**
- * @brief NetworkManager::disconnected
- * Called when TCP socket is disconnected
- */
-void NetworkManager::disconnected() {
-    qDebug() << "disconnected";
-}
-
-/**
- * @brief NetworkManager::readJson
- */
-void NetworkManager::readJson() {
-    qDebug() << socket_->readAll();
-    socket_->write("herro");
 }
 
 /**
@@ -143,7 +182,7 @@ void NetworkManager::readJson() {
  * @param socketError
  */
 void NetworkManager::handleError(QAbstractSocket::SocketError socketError) {
-    qDebug() << socketError;
+//    qDebug() << socketError;
 }
 
 void NetworkManager::onManagerFinished(QNetworkReply *reply) {
@@ -167,13 +206,19 @@ void NetworkManager::onSignInManagerFinished(QNetworkReply *reply) {
     QJsonObject jsonReply = jsonDoc.object();
 
     QJsonObject status = jsonReply["status"].toObject();
-    QJsonArray fileSystemObject = jsonReply["FileSystemObject"].toArray();
-    QJsonObject userid = jsonReply["user_id"].toObject();
+    QJsonArray fileSystemArray = jsonReply["fs_objects"].toArray();
+    QJsonArray directoriesArray = jsonReply["directories"].toArray();
+    QString userid = jsonReply["user_id"].toString();
 
     QString message = jsonReply["message"].toString();
     qDebug() << message;
+    qDebug() << fileSystemArray;
+    qDebug() << directoriesArray;
     if(message == "Sign in successful") {
         SignInSuccessful();
+        LoadScene(directoriesArray, fileSystemArray);
+        userid_ = userid;
+        SetUserid(userid);
     }
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignInManagerFinished);
@@ -210,4 +255,54 @@ void NetworkManager::onSignOutManagerFinished(QNetworkReply *reply) {
 
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignOutManagerFinished);
+}
+
+void NetworkManager::onFileManagerFinished(QNetworkReply *reply) {
+    QByteArray buffer = reply->readAll();
+    qDebug() << buffer;
+    QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
+    QJsonObject jsonReply = jsonDoc.object();
+
+    QString message = jsonReply["message"].toString();
+    qDebug() << message;
+
+    disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
+}
+
+void NetworkManager::onGetFileManagerFinished(QNetworkReply *reply) {
+    qDebug() << "In file manager get";
+    qDebug() << reply;
+    QByteArray buffer = reply->readAll();
+    qDebug() << buffer;
+    QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
+    QJsonObject jsonReply = jsonDoc.object();
+
+    QString data = jsonReply["data"].toString();
+    qDebug() << data;
+    qDebug() << "End manager";
+    disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onGetFileManagerFinished);
+}
+
+/**
+ * @brief NetworkManager::connected
+ * Called when TCP socket connection is successful
+ */
+void NetworkManager::connected() {
+    qDebug() << "connceted";
+}
+
+/**
+ * @brief NetworkManager::disconnected
+ * Called when TCP socket is disconnected
+ */
+void NetworkManager::disconnected() {
+    qDebug() << "disconnected";
+}
+
+/**
+ * @brief NetworkManager::readJson
+ */
+void NetworkManager::readJson() {
+    qDebug() << socket_->readAll();
+    socket_->write("herro");
 }

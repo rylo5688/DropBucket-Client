@@ -21,11 +21,11 @@ public:
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
-    void setName(std::string n);
+    void setName(QString n);
     void setParent(Directory* parent);
-    void setRelativePath(std::string path);
-    std::string getName() const;
-    std::string getRelativePath() const;
+    void setRelativePath(QString path);
+    QString getName() const;
+    QString getRelativePath() const;
     Directory* getParent();
 
     virtual void onClick() { } // must be overriden
@@ -37,8 +37,8 @@ public:
     }
 
 protected:
-    std::string name;
-    std::string relativePath_;
+    QString name;
+    QString relativePath_;
     int x;
     int y;
 

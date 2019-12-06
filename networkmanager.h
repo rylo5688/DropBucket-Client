@@ -10,7 +10,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QDir>
 #include <QFile>
+#include <QSysInfo>
+#include <QImageReader>
+#include <QBuffer>
 
 class NetworkManager : public QObject
 {
@@ -23,9 +27,11 @@ public:
 
     void SignOutPost(QByteArray *toPost);
 
-    void GetFile(QString urlSuffix);
+    void FilePost(QString filePath, QString DirectoryAddedTo);
 
-    void Delete(QString urlSuffix, QFile* toDelete);
+    void FileGet(QString filePath);
+
+    void FileDelete(QString filePath);
 
     static NetworkManager* getInstance();
 
@@ -33,6 +39,10 @@ signals:
     void SignUpSuccessful();
 
     void SignInSuccessful();
+
+    void SetUserid(QString userid);
+
+    void LoadScene(QJsonArray directoriesArray, QJsonArray filesArray);
 
 private slots:
     void connected();
@@ -47,6 +57,10 @@ private slots:
     void onSignUpManagerFinished(QNetworkReply *reply);
 
     void onSignOutManagerFinished(QNetworkReply *reply);
+
+    void onGetFileManagerFinished(QNetworkReply *reply);
+
+    void onFileManagerFinished(QNetworkReply *reply);
 
 private:
     // C++ Singleton: https://gist.github.com/pazdera/1098119
@@ -63,6 +77,7 @@ private:
     QNetworkReply *reply_;
     QFile *file;
     bool httpRequestAborted_;
+    QString userid_;
 };
 
 #endif // NETWORKMANAGER_H

@@ -12,7 +12,7 @@ class SimpleDirectoryFactory
 public:
     SimpleDirectoryFactory();
 
-    Directory* createDir(int x, int y, std::string type, std::string name, std::string md5 = "");
+    Directory* createDir(int x, int y, QString type, QString name, QString md5 = "");
 
 
 };

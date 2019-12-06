@@ -21,11 +21,22 @@ FileExplorerScene::FileExplorerScene()
  * TODO
  * Replace with JSON from HTTP response, FileSystemObject
  */
-void FileExplorerScene::SignInSuccess() {
-    QJsonObject json = OpenReadJSON();
-    CreateDirectoryComposite(json);
+void FileExplorerScene::SignInSuccess(QJsonArray directoriesArray, QJsonArray filesArray) {
+    qDebug() << "In FES sign in success slot";
+    qDebug() << directoriesArray;
+    qDebug() << filesArray;
+
+//    QJsonObject json = OpenReadJSON();
+    CreateDirectoryComposite(directoriesArray, filesArray);
+//    QJsonDocument currDirStatus = DirectoryToJson();
+//    QJsonArray files = currDirStatus["fs_objects"].toArray();
+//    qDebug() << files;
+    HandleSync(DirectoryToJson());
     LoadScene(root_dir_);
     curr_dir_ = root_dir_;
+
+    qDebug() << "Testing Get::::";
+    NetworkManager::getInstance()->FileGet("");
 }
 
 /**
@@ -44,23 +55,19 @@ QJsonDocument FileExplorerScene::DirectoryToJson() {
         QString filePath = it.next();
         QFileInfo fi(filePath);
         QFile file(filePath);
-        QByteArray md5;
+        QString md5;
         if(file.open(QFile::ReadOnly)) {
-            md5 = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5);
+            md5 = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Md5).toHex();
         }
         QString relativePath = filePath;
         relativePath.remove(0, dropbucketDirPath.length());
-        qDebug() << fi.fileName();
-        qDebug() << relativePath;
-        fileInfoObj.insert("relativePath", relativePath);
-        fileInfoObj.insert("md5", QString(md5));
-        fileObj.insert(fi.fileName(), fileInfoObj);
+        fileObj.insert(relativePath, md5);
         array.push_back(fileObj);
     }
     QJsonObject fileSystemObject;
-    fileSystemObject.insert("FileSystemObject", array);
+    fileSystemObject.insert("fs_objects", array);
     QJsonDocument doc(fileSystemObject);
-    qDebug() << doc.toJson();
+    qDebug() << doc;
     qDebug() << "----------------------------------------";
 
     return doc;
@@ -125,7 +132,7 @@ void FileExplorerScene::LoadScene(Directory* dir) {
     curr_y_ = 0;
     std::vector<Directory*> contents = dir->getContents();
     AddIcons(dir->getContents());
-    UpdateDirectoryLabel(QString::fromStdString(dir->getRelativePath()));
+    UpdateDirectoryLabel(dir->getRelativePath());
     update();
 }
 
@@ -173,48 +180,53 @@ bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
 
 /**
  * @brief FileExplorerScene::CreateDirectoryComposite
- * This function updates the directoryMap_ to reflect the composite structure defined by
- * the json.
- * @param json Reference to the QJsonObject to create the composite structure from.
+ * @param directoriesArray
+ * @param filesArray
  */
-void FileExplorerScene::CreateDirectoryComposite(QJsonObject &json) {
-    std::map<QString, Directory*>::iterator mapIt;
-    QJsonArray files = json["FileSystemObject"].toArray();
+void FileExplorerScene::CreateDirectoryComposite(QJsonArray directoriesArray, QJsonArray filesArray) {
     QJsonArray::iterator it;
-    for(it = files.begin(); it != files.end(); it++) {
-        QJsonObject currFile = (*it).toObject();
-        QString name = currFile.keys()[0];
-        currFile = currFile[name].toObject();
-        QString md5 = currFile["md5"].toString();
-        QString relativePath = currFile["relativePath"].toString();
+    // First create all the directories, root dir first
+    Directory *root = factory_->createDir(0, 0, "folder", "/");
+    root->setRelativePath("/");
+    directoryMap_["/"] = root;
+    root_dir_ = root;
+    for(it = directoriesArray.begin(); it != directoriesArray.end(); it++) {
+        qDebug() << *it;
+        QString relativePath = (*it).toString();
         QStringList splitPath = relativePath.split("/", QString::SkipEmptyParts);
-        mapIt = directoryMap_.find(relativePath);
-        Directory *newDir;
-        if(mapIt != directoryMap_.end()) {
-            // directory map contains the directory
-            newDir = directoryMap_[relativePath];
+        qDebug() << relativePath;
+        qDebug() << splitPath;
+        Directory *newDir = factory_->createDir(0, 0, "folder", splitPath[splitPath.size()- 1]);
+        newDir->setRelativePath(relativePath);
+        directoryMap_[relativePath] = newDir;
+        splitPath.pop_back();
+        QString parent = splitPath.join('/') + '/';
+        qDebug() << parent;
+        Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
+        p->AddDir(newDir);
+        newDir->setParent(p);
+    }
+
+    // Directories created - fill them files
+    for(it = filesArray.begin(); it != filesArray.end(); it++) {
+        qDebug() << *it;
+        QJsonObject fileObj = (*it).toObject();
+        QString relativePath = fileObj.keys()[0];
+        QStringList splitPath = relativePath.split("/", QString::SkipEmptyParts);
+        QString fileName = splitPath[splitPath.length() - 1];
+        QString parent;
+        Directory *file = factory_->createDir(0, 0, "file", fileName, fileObj[relativePath].toString());
+        file->setRelativePath(relativePath);
+        if(splitPath.size() == 1) {
+            // File is in root directory
+            parent = "/";
         }
         else {
-            //directory map doesn't contain the directory - create it
-            newDir = factory_->createDir(0, 0, "folder", splitPath[splitPath.size() - 1].toStdString());
-            newDir->setRelativePath(relativePath.toStdString());
             splitPath.pop_back();
-            directoryMap_[relativePath] = newDir;
-
-            if(relativePath == "/DropBucket/") {
-                root_dir_ = newDir;
-            }
-
-            QString parent = "/" + splitPath.join('/') + "/";
-            if(parent != "//") {
-                Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
-                p->AddDir(newDir);
-                newDir->setParent(p);
-            }
+            parent = splitPath.join('/') + '/';
         }
-        Directory *file = factory_->createDir(0, 0, "file", name.toStdString(), md5.toStdString());
-        newDir->AddDir(file);
-        file->setRelativePath(relativePath.toStdString());
+        Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
+        p->AddDir(file);
     }
 }
 
@@ -249,7 +261,7 @@ void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
         QList<QUrl>::iterator it;
         for(it = urlLIst.begin(); it != urlLIst.end(); it++) {
             QByteArray md5 = QCryptographicHash::hash(mimeData->data(GetMimeType(mimeData)), QCryptographicHash::Md5);
-            std::string Md5 = QString(md5).toStdString();
+            QString Md5 = md5.toHex();
             QString url = (*it).toLocalFile();
             AddFile(url, Md5);
             pathList.append(url);
@@ -260,19 +272,20 @@ void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
     }
 }
 
-void FileExplorerScene::AddFile(QString filePath, std::string md5) {
+void FileExplorerScene::AddFile(QString filePath, QString md5) {
     QStringList splitPath = filePath.split("/", QString::SkipEmptyParts);
     const QDir pathDir(filePath);
     if(!pathDir.exists()) {
         // Check it is a directory - maybe explore the whole folder and upload it - later
         qDebug() << "file";
         // Create the file - add it to the directory
-        Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1].toStdString(), md5);
-        file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1].toStdString());
+        Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1], md5);
+        file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1]);
         curr_dir_->AddDir(file);
         curr_x_ += 50;
         AddIcon(curr_x_, curr_y_ + 10, file);
         curr_x_ += 56;
+        NetworkManager::getInstance()->FilePost(filePath, curr_dir_->getRelativePath());
     }
 }
 

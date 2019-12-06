@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QFileSystemWatcher>
+#include <QJsonDocument>
 #include <QFileInfoList>
 #include <QDir>
 //#include <QMainWindow>
@@ -16,7 +17,8 @@ public:
 
     virtual void WatchDirectory(QDir dir) {}
 
-    virtual void HandleSync() {}
+public slots:
+    virtual void HandleSync(QJsonDocument directoryJson) {}
 
 signals:
     void CompareDirectory(QFileInfoList files);

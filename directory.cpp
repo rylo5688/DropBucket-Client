@@ -22,26 +22,31 @@ void Directory::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     Q_UNUSED(widget);
 
     painter->drawPixmap(QPointF(x,y), pixmap(), boundingRect());
-    painter->drawText(QPoint(x + 10, y + 65), QString::fromStdString(name));
+    if(name.size() > 10) {
+        painter->drawText(QPoint(x + 10, y + 65), name.mid(0,10) + "...");
+    }
+    else {
+        painter->drawText(QPoint(x + 10, y + 65), name);
+    }
 }
 
 Directory* Directory::getParent() {
     return parent;
 }
 
-std::string Directory::getName() const {
+QString Directory::getName() const {
     return name;
 }
 
-std::string Directory::getRelativePath() const {
+QString Directory::getRelativePath() const {
     return relativePath_;
 }
 
-void Directory::setName(std::string n) {
+void Directory::setName(QString n) {
     name = n;
 }
 
-void Directory::setRelativePath(std::string path) {
+void Directory::setRelativePath(QString path) {
     relativePath_ = path;
 }
 

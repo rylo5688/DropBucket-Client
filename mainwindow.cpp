@@ -5,6 +5,7 @@
 
 QString MainWindow::username = "";
 QString MainWindow::password = "";
+QString MainWindow::userid = "";
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -44,6 +45,8 @@ void MainWindow::UISetUp() {
     connect(fileExplorerScene, &FileExplorerScene::UpdateDirectoryLabel, this, &MainWindow::UpdateDirectoryLabel);
     connect(upload_, &UploadDialog::UploadFile, fileExplorerScene, &FileExplorerScene::AddFile);
 
+    connect(NetworkManager::getInstance(), &NetworkManager::LoadScene, fileExplorerScene, &FileExplorerScene::SignInSuccess);
+
     filePathLabel = ui->pwdLabel;
     filePathLabel->setText("/DropBucket/"); // Place holder
 
@@ -55,6 +58,9 @@ void MainWindow::UISetUp() {
 
     sync_->WatchDirectory(homeDir_);
     connect(sync_, &SyncOn::CompareDirectory, fileExplorerScene, &FileExplorerScene::CompareDirectory);
+    connect(fileExplorerScene, &FileExplorerScene::HandleSync, sync_, &Sync::HandleSync);
+
+    connect(NetworkManager::getInstance(), &NetworkManager::SetUserid, this, &MainWindow::SetUserid);
 }
 
 /**
@@ -133,14 +139,21 @@ void MainWindow::on_profileButton_clicked() {
  * @param username
  * @param password
  */
-void MainWindow::SetUserInfo(QString username, QString password) {
+void MainWindow::SetUsername(QString username) {
     this->username = username;
+}
+
+void MainWindow::SetPassword(QString password) {
     this->password = password;
+}
+
+void MainWindow::SetUserid(QString userid) {
+    this->userid = userid;
 }
 
 /**
  * @brief MainWindow::SignInSuccessful
  */
 void MainWindow::SignInSuccessful() {
-    fileExplorerScene->SignInSuccess();
+//    fileExplorerScene->SignInSuccess();
 }

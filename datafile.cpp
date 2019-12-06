@@ -5,11 +5,11 @@ DataFile::DataFile(int x, int y, QPixmap pixmap, QGraphicsItem *parent) : Direct
 
 }
 
-std::string DataFile::getMd5() const {
+QString DataFile::getMd5() const {
     return md5;
 }
 
-void DataFile::setMd5(std::string md5) {
+void DataFile::setMd5(QString md5) {
     this->md5 = md5;
 }
 

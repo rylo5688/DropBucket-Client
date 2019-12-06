@@ -45,7 +45,8 @@ void LoginDialog::on_signInButton_clicked()
 
     nMgr->SignInPost(&toPost);
 
-    SetUserInfo(username, password);
+    SetUsername(username);
+    SetPassword(password);
     LoadScene();
 }
 

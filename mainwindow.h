@@ -33,6 +33,8 @@ public:
 
     static QString password;
 
+    static QString userid;
+
 private:
 
     void SetState(Sync* state);
@@ -71,7 +73,11 @@ private slots:
     void deleteFile();
 
 public slots:
-    void SetUserInfo(QString username, QString password);
+    void SetUsername(QString username);
+
+    void SetPassword(QString password);
+
+    void SetUserid(QString userid);
 
     void SignInSuccessful();
 };

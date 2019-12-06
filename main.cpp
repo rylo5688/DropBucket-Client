@@ -21,7 +21,8 @@ int main(int argc, char *argv[])
     MainWindow w;
     LoginDialog ld;
 
-    QObject::connect(&ld, &LoginDialog::SetUserInfo, &w, &MainWindow::SetUserInfo);
+    QObject::connect(&ld, &LoginDialog::SetUsername, &w, &MainWindow::SetUsername);
+    QObject::connect(&ld, &LoginDialog::SetPassword, &w, &MainWindow::SetPassword);
     QObject::connect(&ld, &LoginDialog::LoadScene, &w, &MainWindow::SignInSuccessful);
 
     w.show();
