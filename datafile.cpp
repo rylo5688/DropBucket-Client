@@ -22,4 +22,5 @@ void DataFile::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 
 void DataFile::DeleteFile() {
     qDebug() << "delte!";
+    NetworkManager::getInstance()->FileDelete(relativePath_);
 }

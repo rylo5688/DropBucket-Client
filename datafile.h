@@ -6,6 +6,7 @@
 #include <QAction>
 #include <QGraphicsSceneContextMenuEvent>
 #include "directory.h"
+#include "networkmanager.h"
 
 class DataFile : public QObject, public Directory
 {

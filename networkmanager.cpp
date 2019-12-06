@@ -20,6 +20,7 @@ NetworkManager::NetworkManager()
     connect(socket_, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &NetworkManager::handleError);
     socket_->connectToHost("localhost", 12000); // Need host name, port
     socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
+//    socket_->write(); write "username,device_id"
 
     url = "http://localhost:5000";
 }
@@ -95,13 +96,18 @@ void NetworkManager::SignOutPost(QByteArray *toPost) {
     Post(&request, toPost);
 }
 
+/**
+ * @brief NetworkManager::FilePost
+ * @param filePath
+ * @param DirectoryAddedTo
+ */
 void NetworkManager::FilePost(QString filePath, QString DirectoryAddedTo) {
     qDebug() << DirectoryAddedTo;
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
     QUrl postUrl = url + "/file/";
     QNetworkRequest request(postUrl);
 
-    QString dropbucketDirPath = QDir::homePath() + "/Dropbucket/";
+    QString dropbucketDirPath = QDir::homePath() + "/Dropbucket";
 
     QStringList splitPath = filePath.split("/", QString::SkipEmptyParts);
     QString newFilePath = dropbucketDirPath + DirectoryAddedTo + splitPath[splitPath.size() - 1];
@@ -109,49 +115,53 @@ void NetworkManager::FilePost(QString filePath, QString DirectoryAddedTo) {
     relativePath.remove(0, dropbucketDirPath.length());
 
     QFile fileToSave(newFilePath);
-    QFile file(filePath);
-    QByteArray data;
-    QByteArray imageFormat = QImageReader::imageFormat(filePath);
-    qDebug() << "image format: " << imageFormat;
-    if(imageFormat == "png" || imageFormat == "jpeg") {
-        QImage image(filePath);
-        QBuffer buff(&data);
-        buff.open(QIODevice::WriteOnly);
-        if(imageFormat == "png") {
-            image.save(&buff, "PNG");
-        }
-        else if(imageFormat == "jpeg") {
-            image.save(&buff, "JPG");
-        }
-        qDebug() << "Data: " << data;
-    }
-    else {
-        if(file.open(QIODevice::ReadOnly)) {
-            data = file.readAll();
-            qDebug () << "file opened";
-            qDebug() << "Data: " << data.constData();
-        }
-        else {
-            qDebug() << "file not opened";
-        }
-    }
+    QFile *file = new QFile(filePath);
 
+    file->open(QIODevice::ReadOnly);
+    fileToSave.resize(file->size());
+    QByteArray data = file->readAll();
     fileToSave.open(QIODevice::WriteOnly);
     fileToSave.write(data);
+    file->close();
     fileToSave.close();
 
-    QJsonObject postJson;
+    QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
-    postJson.insert("file", data.constData());
-    postJson.insert("relative_path", relativePath);
-    postJson.insert("device_id", QString(QSysInfo::machineUniqueId()));
-//    postJson.insert("user_id", userid_);
+    QHttpPart deviceIdPart;
+    deviceIdPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"device_id\""));
+    deviceIdPart.setBody(QSysInfo::machineUniqueId());
 
-    QByteArray toPost;
-    QJsonDocument doc(postJson);
-    qDebug() << doc.toJson();
-    QByteArray json = doc.toJson();
-    Post(&request, &json);
+    QHttpPart relativePathPart;
+    relativePathPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"relative_path\""));
+    relativePathPart.setBody(relativePath.toUtf8());
+
+    QHttpPart filePart;
+    file->open(QIODevice::ReadOnly);
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=\"/" + filePath +"\""));
+    filePart.setBodyDevice(file);
+    file->setParent(multiPart);
+
+    multiPart->append(deviceIdPart);
+    multiPart->append(relativePathPart);
+    multiPart->append(filePart);
+
+    // https://stackoverflow.com/questions/39549211/qhttpmultipart-generates-different-boundary
+    quint32 random[6];
+    QRandomGenerator::global()->fillRange(random);
+    QByteArray boundary = "--boundary_zyl_"
+               + QByteArray::fromRawData(reinterpret_cast<char *>(random),
+    sizeof(random)).toBase64();
+
+    QByteArray contentType;
+    contentType += "multipart/";
+    contentType += "form-data";
+    contentType += "; boundary=";
+    contentType += boundary;
+    multiPart->setBoundary(boundary);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
+    QNetworkReply *reply = manager_.post(request, multiPart);
+    multiPart->setParent(reply);
+//    file->close();
 }
 
 /**
@@ -160,10 +170,17 @@ void NetworkManager::FilePost(QString filePath, QString DirectoryAddedTo) {
  */
 void NetworkManager::FileGet(QString filePath) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onGetFileManagerFinished);
-    QUrl getUrl = url + "/file/?relative_path=" + "abc.png";
+    QUrl getUrl = url + "/file/?relative_path=" + "test.txt";
     qDebug() << getUrl;
     QNetworkRequest request(getUrl);
-    manager_.get(request);
+    reply_ = manager_.get(request);
+    connect(reply_, &QNetworkReply::downloadProgress, this, &NetworkManager::downloadProgress);
+    connect(reply_, &QNetworkReply::readyRead, this, &NetworkManager::onGetFileReadyRead);
+}
+
+
+void NetworkManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal) {
+    qDebug() << bytesReceived << bytesTotal;
 }
 
 /**
@@ -171,10 +188,12 @@ void NetworkManager::FileGet(QString filePath) {
  * @param urlSuffix
  * @param toDelete
  */
-void NetworkManager::FileDelete(QString filePath) {
-    QUrl deleteUrl = url;
+void NetworkManager::FileDelete(QString relativePath) {
+    connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onDeleteFileManagerFinished);
+
+    QUrl deleteUrl = url + "/file/?relative_path=" + relativePath;
     QNetworkRequest request(deleteUrl); // replace URL w/ path to the file going to be deleted
-//    manager.deleteResource(request);
+    manager_.deleteResource(request);
 }
 
 /**
@@ -182,7 +201,7 @@ void NetworkManager::FileDelete(QString filePath) {
  * @param socketError
  */
 void NetworkManager::handleError(QAbstractSocket::SocketError socketError) {
-//    qDebug() << socketError;
+    qDebug() << socketError;
 }
 
 void NetworkManager::onManagerFinished(QNetworkReply *reply) {
@@ -255,6 +274,7 @@ void NetworkManager::onSignOutManagerFinished(QNetworkReply *reply) {
 
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignOutManagerFinished);
+    reply->deleteLater();
 }
 
 void NetworkManager::onFileManagerFinished(QNetworkReply *reply) {
@@ -267,20 +287,35 @@ void NetworkManager::onFileManagerFinished(QNetworkReply *reply) {
     qDebug() << message;
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
+    reply->deleteLater();
 }
 
 void NetworkManager::onGetFileManagerFinished(QNetworkReply *reply) {
     qDebug() << "In file manager get";
     qDebug() << reply;
-    QByteArray buffer = reply->readAll();
-    qDebug() << buffer;
-    QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
-    QJsonObject jsonReply = jsonDoc.object();
-
-    QString data = jsonReply["data"].toString();
-    qDebug() << data;
+    if(reply->error()) {
+        qDebug() << reply->errorString();
+    }
+    else{
+        qDebug() << "no error";
+    }
     qDebug() << "End manager";
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onGetFileManagerFinished);
+    reply->deleteLater();
+}
+
+void NetworkManager::onGetFileReadyRead() {
+    qDebug() << "Ready read";
+//    qDebug() << reply_->readAll();
+    QFile fileToWrite("C:/Users/thoma/Dropbucket/test.txt");
+    fileToWrite.open(QIODevice::WriteOnly);
+    fileToWrite.write(reply_->readAll());
+    fileToWrite.close();
+}
+
+void NetworkManager::onDeleteFileManagerFinished(QNetworkReply *reply) {
+    qDebug() << reply->readAll();
+    disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onDeleteFileManagerFinished);
 }
 
 /**
@@ -288,7 +323,7 @@ void NetworkManager::onGetFileManagerFinished(QNetworkReply *reply) {
  * Called when TCP socket connection is successful
  */
 void NetworkManager::connected() {
-    qDebug() << "connceted";
+    qDebug() << "connected";
 }
 
 /**

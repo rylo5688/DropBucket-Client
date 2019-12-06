@@ -15,6 +15,9 @@
 #include <QSysInfo>
 #include <QImageReader>
 #include <QBuffer>
+#include <QHttpMultiPart>
+#include <QHttpPart>
+#include <QRandomGenerator>
 
 class NetworkManager : public QObject
 {
@@ -31,7 +34,7 @@ public:
 
     void FileGet(QString filePath);
 
-    void FileDelete(QString filePath);
+    void FileDelete(QString relativePath);
 
     static NetworkManager* getInstance();
 
@@ -60,7 +63,13 @@ private slots:
 
     void onGetFileManagerFinished(QNetworkReply *reply);
 
+    void onGetFileReadyRead();
+
     void onFileManagerFinished(QNetworkReply *reply);
+
+    void onDeleteFileManagerFinished(QNetworkReply *reply);
+
+    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
 private:
     // C++ Singleton: https://gist.github.com/pazdera/1098119
