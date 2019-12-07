@@ -1,9 +1,12 @@
 #include "networkmanager.h"
+#include "mainwindow.h"
+
 
 /**
  * @brief NetworkManager::NetworkManager
  * TCP example - https://www.bogotobogo.com/cplusplus/sockets_server_client_QT.php
  * HTTP example - https://code.qt.io/cgit/qt/qtbase.git/tree/examples/network/http?h=5.13
+ * Download Manager example
  */
 
 NetworkManager* NetworkManager::instance_ = nullptr;
@@ -18,8 +21,6 @@ NetworkManager::NetworkManager()
     connect(socket_, &QTcpSocket::disconnected, this, &NetworkManager::disconnected);
     connect(socket_, &QIODevice::readyRead, this, &NetworkManager::readJson);
     connect(socket_, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &NetworkManager::handleError);
-    socket_->connectToHost("localhost", 12000); // Need host name, port
-    socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 //    socket_->write(); write "username,device_id"
 
     url = "http://localhost:5000";
@@ -101,8 +102,9 @@ void NetworkManager::SignOutPost(QByteArray *toPost) {
  * @param filePath
  * @param DirectoryAddedTo
  */
-void NetworkManager::FilePost(QString filePath, QString DirectoryAddedTo) {
-    qDebug() << DirectoryAddedTo;
+bool NetworkManager::FilePost(QString filePath, QString directory) {
+    qDebug() << directory;
+
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
     QUrl postUrl = url + "/file/";
     QNetworkRequest request(postUrl);
@@ -110,7 +112,7 @@ void NetworkManager::FilePost(QString filePath, QString DirectoryAddedTo) {
     QString dropbucketDirPath = QDir::homePath() + "/Dropbucket";
 
     QStringList splitPath = filePath.split("/", QString::SkipEmptyParts);
-    QString newFilePath = dropbucketDirPath + DirectoryAddedTo + splitPath[splitPath.size() - 1];
+    QString newFilePath = dropbucketDirPath + directory + splitPath[splitPath.size() - 1];
     QString relativePath = newFilePath;
     relativePath.remove(0, dropbucketDirPath.length());
 
@@ -220,7 +222,6 @@ void NetworkManager::onManagerFinished(QNetworkReply *reply) {
  */
 void NetworkManager::onSignInManagerFinished(QNetworkReply *reply) {
     QByteArray buffer = reply->readAll();
-    qDebug() << buffer;
     QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
     QJsonObject jsonReply = jsonDoc.object();
 
@@ -230,17 +231,55 @@ void NetworkManager::onSignInManagerFinished(QNetworkReply *reply) {
     QString userid = jsonReply["user_id"].toString();
 
     QString message = jsonReply["message"].toString();
-    qDebug() << message;
-    qDebug() << fileSystemArray;
-    qDebug() << directoriesArray;
     if(message == "Sign in successful") {
         SignInSuccessful();
-        LoadScene(directoriesArray, fileSystemArray);
+
+        socket_->connectToHost("localhost", 12000); // Need host name, port
+        socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
+
+        SignInLoadScene(directoriesArray, fileSystemArray);
         userid_ = userid;
         SetUserid(userid);
     }
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignInManagerFinished);
+}
+
+void NetworkManager::DownloadFiles(QStringList relativePaths) {
+    connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::DownloadComplete);
+
+    QString getUrl = url + "/file/?relative_path=";
+    QStringList::Iterator it;
+    for(it = relativePaths.begin(); it != relativePaths.end(); it++) {
+        QNetworkRequest request(QUrl(getUrl + (*it)));
+        QNetworkReply *reply = manager_.get(request);
+
+        currentDownloads_.append(reply);
+    }
+}
+
+void NetworkManager::DownloadComplete(QNetworkReply *reply) {
+    qDebug() << "Download complete";
+//    qDebug() << reply_->readAll();
+    qDebug() << reply->url();
+    QString urlToRemove = url + "/file/?relative_path=";
+    QString relativePath = reply->url().toString().remove(0,urlToRemove.size());
+    qDebug() << relativePath;
+    QFile fileToWrite("C:/Users/thoma/Dropbucket/" + relativePath);
+    fileToWrite.open(QIODevice::WriteOnly);
+    fileToWrite.write(reply->readAll());
+    fileToWrite.close();
+
+    currentDownloads_.removeAll(reply);
+    reply->deleteLater();
+
+    // Current downloads all done
+    if(currentDownloads_.empty()) {
+        disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::DownloadComplete);
+        // Emit signal
+        qDebug() << "Current downloads empty";
+        DownloadCompleteSignal();
+    }
 }
 
 /**
@@ -305,8 +344,8 @@ void NetworkManager::onGetFileManagerFinished(QNetworkReply *reply) {
 }
 
 void NetworkManager::onGetFileReadyRead() {
-    qDebug() << "Ready read";
-//    qDebug() << reply_->readAll();
+    QString urlToRemove = url + "/file/?relative_path=";
+    QString relativePath = reply_->url().toString().remove(0,urlToRemove.size());
     QFile fileToWrite("C:/Users/thoma/Dropbucket/test.txt");
     fileToWrite.open(QIODevice::WriteOnly);
     fileToWrite.write(reply_->readAll());
@@ -314,7 +353,18 @@ void NetworkManager::onGetFileReadyRead() {
 }
 
 void NetworkManager::onDeleteFileManagerFinished(QNetworkReply *reply) {
-    qDebug() << reply->readAll();
+    QByteArray buffer = reply->readAll();
+    QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
+    QJsonObject jsonReply = jsonDoc.object();
+
+    QString message = jsonReply["message"].toString();
+
+    qDebug() << message;
+
+    if(message == "File successfully deleted") {
+        FileDeleteSuccessful();
+    }
+
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onDeleteFileManagerFinished);
 }
 
@@ -324,6 +374,9 @@ void NetworkManager::onDeleteFileManagerFinished(QNetworkReply *reply) {
  */
 void NetworkManager::connected() {
     qDebug() << "connected";
+    QString toSend = MainWindow::username + "," + QSysInfo::machineUniqueId();
+    qDebug() << toSend;
+    socket_->write(toSend.toUtf8());
 }
 
 /**
@@ -338,6 +391,13 @@ void NetworkManager::disconnected() {
  * @brief NetworkManager::readJson
  */
 void NetworkManager::readJson() {
-    qDebug() << socket_->readAll();
-    socket_->write("herro");
+    qDebug() << "response received from socket";
+    QByteArray read = socket_->readAll();
+    QJsonDocument tcpJson(QJsonDocument::fromJson(read));
+    QJsonObject jsonReply = tcpJson.object();
+
+    QJsonArray fileSystemArray = jsonReply["fs_objects"].toArray();
+    QJsonArray directoriesArray = jsonReply["directories"].toArray();
+
+    SyncAndLoadScene(directoriesArray, fileSystemArray);
 }

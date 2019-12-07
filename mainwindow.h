@@ -72,6 +72,10 @@ private slots:
 
     void deleteFile();
 
+    void EnableWindow();
+
+    void DisableWindow();
+
 public slots:
     void SetUsername(QString username);
 
@@ -80,5 +84,11 @@ public slots:
     void SetUserid(QString userid);
 
     void SignInSuccessful();
+
+    void DownloadFinished();
+
+    void FileAdded(QString filePath);
+
+    void FileDeleted(QString relativePath);
 };
 #endif // MAINWINDOW_H

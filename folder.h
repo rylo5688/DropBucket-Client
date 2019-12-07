@@ -9,6 +9,7 @@
 
 class Folder : public Directory
 {
+    Q_OBJECT
 public:
     enum { Type = UserType + 2 };
 

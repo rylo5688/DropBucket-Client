@@ -7,11 +7,12 @@ FileExplorerScene::FileExplorerScene()
 {
     Q_INIT_RESOURCE(resources);
 
+    allowClicks_ = true;
+
     curr_x_ = 0;
     curr_y_ = 0;
 
     factory_ = new SimpleDirectoryFactory();
-
 
     DirectoryToJson();
 }
@@ -22,21 +23,20 @@ FileExplorerScene::FileExplorerScene()
  * Replace with JSON from HTTP response, FileSystemObject
  */
 void FileExplorerScene::SignInSuccess(QJsonArray directoriesArray, QJsonArray filesArray) {
-    qDebug() << "In FES sign in success slot";
-    qDebug() << directoriesArray;
-    qDebug() << filesArray;
 
-//    QJsonObject json = OpenReadJSON();
     CreateDirectoryComposite(directoriesArray, filesArray);
-//    QJsonDocument currDirStatus = DirectoryToJson();
-//    QJsonArray files = currDirStatus["fs_objects"].toArray();
-//    qDebug() << files;
-    HandleSync(DirectoryToJson());
+
+    HandleSync(directoriesArray, filesArray);
     LoadScene(root_dir_);
     curr_dir_ = root_dir_;
+}
 
-    qDebug() << "Testing Get::::";
-    NetworkManager::getInstance()->FileGet("");
+void FileExplorerScene::EnableScene() {
+    allowClicks_ = true;
+}
+
+void FileExplorerScene::DisableScene() {
+    allowClicks_ = false;
 }
 
 /**
@@ -44,7 +44,8 @@ void FileExplorerScene::SignInSuccess(QJsonArray directoriesArray, QJsonArray fi
  * @return
  */
 QJsonDocument FileExplorerScene::DirectoryToJson() {
-    qDebug() << "-----------Directory to JSON------------";
+    // TODO: Add "directories"
+//    qDebug() << "-----------Directory to JSON------------";
     QString dropbucketDirPath = QDir::homePath() + "/Dropbucket/";
     QDir dropbucketDir(dropbucketDirPath);
     QDirIterator it(dropbucketDirPath, QStringList() << "*", QDir::Files, QDirIterator::Subdirectories);
@@ -67,8 +68,8 @@ QJsonDocument FileExplorerScene::DirectoryToJson() {
     QJsonObject fileSystemObject;
     fileSystemObject.insert("fs_objects", array);
     QJsonDocument doc(fileSystemObject);
-    qDebug() << doc;
-    qDebug() << "----------------------------------------";
+//    qDebug() << doc;
+//    qDebug() << "----------------------------------------";
 
     return doc;
 }
@@ -94,6 +95,7 @@ void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
  * @param toAdd
  */
 void FileExplorerScene::AddIcon(int x, int y, Directory* toAdd) {
+    qDebug() << "adding icon";
     toAdd->setPos(QPointF(x,y));
     addItem(toAdd);
     curr_loaded_.push_back(toAdd);
@@ -140,23 +142,23 @@ void FileExplorerScene::LoadScene(Directory* dir) {
  * @brief FileExplorerScene::OpenReadJSON
  * @return
  */
-QJsonObject FileExplorerScene::OpenReadJSON() {
-    Q_INIT_RESOURCE(resources);
-    QFile loadFile(QStringLiteral("://jsons/test.json"));
+//QJsonObject FileExplorerScene::OpenReadJSON() {
+//    Q_INIT_RESOURCE(resources);
+//    QFile loadFile(QStringLiteral("://jsons/test.json"));
 
-    if(!loadFile.open(QIODevice::ReadOnly)) {
-        qDebug() << "couldn't read JSON";
-    }
+//    if(!loadFile.open(QIODevice::ReadOnly)) {
+//        qDebug() << "couldn't read JSON";
+//    }
 
-    QByteArray dirData = loadFile.readAll();
+//    QByteArray dirData = loadFile.readAll();
 
-    QJsonParseError err;
-    QJsonDocument dirDoc(QJsonDocument::fromJson(dirData, &err));
+//    QJsonParseError err;
+//    QJsonDocument dirDoc(QJsonDocument::fromJson(dirData, &err));
 
-    QJsonObject obj = dirDoc.object();
+//    QJsonObject obj = dirDoc.object();
 
-    return obj;
-}
+//    return obj;
+//}
 
 /**
  * @brief checkInVisited
@@ -179,7 +181,7 @@ bool checkInVisited(std::vector<QJsonObject> *visited, QJsonObject find) {
 }
 
 /**
- * @brief FileExplorerScene::CreateDirectoryComposite
+ * @brief FileExplorerScene::CreateDirectory
  * @param directoriesArray
  * @param filesArray
  */
@@ -216,6 +218,8 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonArray directoriesArray, QJ
         QString fileName = splitPath[splitPath.length() - 1];
         QString parent;
         Directory *file = factory_->createDir(0, 0, "file", fileName, fileObj[relativePath].toString());
+        connect(file, &DataFile::Deleted, this, &FileExplorerScene::FileDeleted);
+        connect(NetworkManager::getInstance(), &NetworkManager::FileDeleteSuccessful, file, &Directory::NetworkDeleteSuccessful);
         file->setRelativePath(relativePath);
         if(splitPath.size() == 1) {
             // File is in root directory
@@ -226,9 +230,35 @@ void FileExplorerScene::CreateDirectoryComposite(QJsonArray directoriesArray, QJ
             parent = splitPath.join('/') + '/';
         }
         Folder* p = qgraphicsitem_cast<Folder*>(directoryMap_[parent]);
+        file->setParent(p);
+        qDebug() << "here";
         p->AddDir(file);
     }
 }
+
+void FileExplorerScene::FileDeleted(Directory *deleted) {
+    FileDeletedSignal(deleted->getRelativePath());
+    qDebug() << "reloading scene";
+    removeItem(deleted);
+    qDebug() << curr_dir_->getContents().size();
+    LoadScene(curr_dir_);
+    update();
+}
+
+void FileExplorerScene::ClearComposite() {
+    delete root_dir_;
+    directoryMap_.clear();
+}
+
+void FileExplorerScene::Sync(QJsonArray directoriesArray, QJsonArray filesArray) {
+    ClearComposite();
+    CreateDirectoryComposite(directoriesArray, filesArray);
+
+    HandleSync(directoriesArray, filesArray);
+    LoadScene(root_dir_);
+    curr_dir_ = root_dir_;
+}
+
 
 /**
  * @brief FileExplorerScene::dragMoveEvent
@@ -275,20 +305,54 @@ void FileExplorerScene::dropEvent(QGraphicsSceneDragDropEvent *event) {
 void FileExplorerScene::AddFile(QString filePath, QString md5) {
     QStringList splitPath = filePath.split("/", QString::SkipEmptyParts);
     const QDir pathDir(filePath);
-    if(!pathDir.exists()) {
-        // Check it is a directory - maybe explore the whole folder and upload it - later
+    QString relativePath;
+    qDebug() << curr_dir_->getRelativePath();
+    if(curr_dir_->getRelativePath() != "/") {
+        relativePath = curr_dir_->getRelativePath() + splitPath[splitPath.length()-1];
+    }
+    else {
+        relativePath = splitPath[splitPath.length()-1];
+    }
+
+
+    QString dropbucketDir = QDir::homePath() + "/Dropbucket" + "/" + relativePath;
+    qDebug() << dropbucketDir;
+    qDebug() << relativePath;
+    if(!pathDir.exists() && !QFileInfo::exists(dropbucketDir)) {
+        // Check it is a directory and that the file doesn't already exist
         qDebug() << "file";
         // Create the file - add it to the directory
         Directory* file = factory_->createDir(0, 0, "file", splitPath[splitPath.length()-1], md5);
-        file->setRelativePath(curr_dir_->getRelativePath() + "/" + splitPath[splitPath.length()-1]);
+        connect(file, &Directory::Deleted, this, &FileExplorerScene::FileDeleted);
+        connect(NetworkManager::getInstance(), &NetworkManager::FileDeleteSuccessful, file, &Directory::NetworkDeleteSuccessful);
+        file->setRelativePath(relativePath);
+        file->setParent(curr_dir_);
         curr_dir_->AddDir(file);
         curr_x_ += 50;
-        AddIcon(curr_x_, curr_y_ + 10, file);
+//        AddIcon(curr_x_, curr_y_ + 10, file);
+        LoadScene(curr_dir_);
         curr_x_ += 56;
+
         NetworkManager::getInstance()->FilePost(filePath, curr_dir_->getRelativePath());
+        FileAdded(dropbucketDir);
     }
+    else {
+        // Will enter here when the file exists in Dropbucket dir
+        QFile fileToSave(dropbucketDir);
+        QFile *file = new QFile(filePath);
+
+        file->open(QIODevice::ReadOnly);
+        fileToSave.resize(file->size());
+        QByteArray data = file->readAll();
+        fileToSave.open(QIODevice::WriteOnly);
+        fileToSave.write(data);
+        file->close();
+        fileToSave.close();
+    }
+    // Upload
 }
 
+// DONT THINK THIS IS NEEDED
 void FileExplorerScene::CompareDirectory(QFileInfoList files) {
     qDebug() << "COMPARING";
     qDebug() << files;
@@ -334,29 +398,30 @@ QStringList FileExplorerScene::getDirectoryKeys() {
  * @param event
  */
 void FileExplorerScene::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    QGraphicsScene::mousePressEvent(event);
-    if(itemAt(event->scenePos(), QTransform()) != nullptr) {
-        QGraphicsItem *clicked = itemAt(event->scenePos(), QTransform());
-        if(event->button() == Qt::LeftButton) {
-            qDebug() << clicked->type();
-            if(clicked->type() == 65538) {
-                // Folder - open its contents
-                if(clicked != root_dir_) {
-                    Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
-                    if(clicked != nullptr) {
-                        LoadScene(dir);
-                    }
-                    else {
-                        qDebug() << "error";
+    if(allowClicks_) {
+        QGraphicsScene::mousePressEvent(event);
+        if(itemAt(event->scenePos(), QTransform()) != nullptr) {
+            QGraphicsItem *clicked = itemAt(event->scenePos(), QTransform());
+            if(event->button() == Qt::LeftButton) {
+                qDebug() << clicked->type();
+                if(clicked->type() == 65538) {
+                    // Folder - open its contents
+                    if(clicked != root_dir_) {
+                        Folder* dir = qgraphicsitem_cast<Folder*>(clicked);
+                        if(clicked != nullptr) {
+                            LoadScene(dir);
+                        }
+                        else {
+                            qDebug() << "error";
+                        }
                     }
                 }
             }
-        }
-        else if(event->button() == Qt::RightButton) {
-            if(clicked->type() == 65539) {
-                qDebug() << "File!";
+            else if(event->button() == Qt::RightButton) {
+                if(clicked->type() == 65539) {
+                    qDebug() << "File!";
+                }
             }
         }
-
     }
 }

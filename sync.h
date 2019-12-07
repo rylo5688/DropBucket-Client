@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QFileSystemWatcher>
 #include <QJsonDocument>
+#include <QJsonArray>
 #include <QFileInfoList>
 #include <QDir>
 //#include <QMainWindow>
@@ -17,11 +18,23 @@ public:
 
     virtual void WatchDirectory(QDir dir) {}
 
+    virtual void WatchFile(QString filePath) {}
+
+    virtual bool CheckIfWatching(QString file) { return false; }
+
+    virtual void RemovePath(QString path) {}
+
 public slots:
-    virtual void HandleSync(QJsonDocument directoryJson) {}
+    virtual void HandleSync(QJsonArray directoriesArray, QJsonArray filesArray) {}
+
+    virtual void DownloadCompleted() {}
 
 signals:
     void CompareDirectory(QFileInfoList files);
+
+    void DisableWindow();
+
+    void EnableWindow();
 
 protected:
     QFileSystemWatcher* watcher_;

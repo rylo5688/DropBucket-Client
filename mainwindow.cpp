@@ -31,6 +31,15 @@ void MainWindow::SetSyncButtonIcon(QString path) {
     syncButton->setIconSize(QSize(32,32));
 }
 
+void MainWindow::EnableWindow() {
+    this->setEnabled(true);
+}
+
+void MainWindow::DisableWindow() {
+    this->setEnabled(false);
+    qDebug() << "Window disabled";
+}
+
 /**
  * Function to setup the folder structure.
  */
@@ -43,9 +52,12 @@ void MainWindow::UISetUp() {
 
     // Connect signals
     connect(fileExplorerScene, &FileExplorerScene::UpdateDirectoryLabel, this, &MainWindow::UpdateDirectoryLabel);
+    connect(fileExplorerScene, &FileExplorerScene::FileAdded, this, &MainWindow::FileAdded);
+    connect(fileExplorerScene, &FileExplorerScene::FileDeletedSignal, this, &MainWindow::FileDeleted);
     connect(upload_, &UploadDialog::UploadFile, fileExplorerScene, &FileExplorerScene::AddFile);
 
-    connect(NetworkManager::getInstance(), &NetworkManager::LoadScene, fileExplorerScene, &FileExplorerScene::SignInSuccess);
+    connect(NetworkManager::getInstance(), &NetworkManager::SignInLoadScene, fileExplorerScene, &FileExplorerScene::SignInSuccess);
+    connect(NetworkManager::getInstance(), &NetworkManager::SyncAndLoadScene, fileExplorerScene, &FileExplorerScene::Sync);
 
     filePathLabel = ui->pwdLabel;
     filePathLabel->setText("/DropBucket/"); // Place holder
@@ -56,10 +68,11 @@ void MainWindow::UISetUp() {
     syncStatus_ = true;
     SetSyncButtonIcon(":/icons/icon_sync.png");
 
-    sync_->WatchDirectory(homeDir_);
     connect(sync_, &SyncOn::CompareDirectory, fileExplorerScene, &FileExplorerScene::CompareDirectory);
     connect(fileExplorerScene, &FileExplorerScene::HandleSync, sync_, &Sync::HandleSync);
-
+    connect(sync_, &SyncOn::DisableWindow, this, &MainWindow::DisableWindow);
+    connect(sync_, &SyncOn::EnableWindow, this, &MainWindow::EnableWindow);
+    connect(NetworkManager::getInstance(), &NetworkManager::DownloadCompleteSignal, sync_, &Sync::DownloadCompleted);
     connect(NetworkManager::getInstance(), &NetworkManager::SetUserid, this, &MainWindow::SetUserid);
 }
 
@@ -84,6 +97,13 @@ void MainWindow::UpdateDirectoryLabel(QString label) {
  */
 void MainWindow::deleteFile() {
     qDebug() << "file";
+}
+
+void MainWindow::FileDeleted(QString relativePath) {
+    QString filePath = homeDir_.path() + "/" + relativePath;
+    sync_->RemovePath(filePath);
+    QFile file(filePath);
+    file.remove();
 }
 
 /**
@@ -156,4 +176,15 @@ void MainWindow::SetUserid(QString userid) {
  */
 void MainWindow::SignInSuccessful() {
 //    fileExplorerScene->SignInSuccess();
+}
+
+void MainWindow::DownloadFinished() {
+    sync_->WatchDirectory(homeDir_);
+}
+
+void MainWindow::FileAdded(QString filePath) {
+    if(!sync_->CheckIfWatching(filePath)) {
+        qDebug() << "Watching" << filePath;
+        sync_->WatchFile(filePath);
+    }
 }

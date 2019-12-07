@@ -8,7 +8,7 @@
 #include "directory.h"
 #include "networkmanager.h"
 
-class DataFile : public QObject, public Directory
+class DataFile : public Directory
 {
     Q_OBJECT
 public:

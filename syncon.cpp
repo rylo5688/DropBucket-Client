@@ -19,24 +19,6 @@ SyncOn::SyncOn() : Sync()
  */
 void SyncOn::WatchDirectory(QDir dir) {
     QDirIterator it(dir.absolutePath(), QDir::Dirs, QDirIterator::Subdirectories);
-    QStringList toAdd;
-    toAdd.append(dir.absolutePath());
-    while (it.hasNext()) {
-//        qDebug() << it.next();
-        QString path = it.next();
-        QStringList list = path.split("/", QString::SkipEmptyParts);
-//        qDebug() << list;
-        if(!list.isEmpty() && (!list.last().compare(".") || !list.last().compare(".."))) {
-//            qDebug() << list.last();
-//            watcher_->addPath(it.next());
-        }
-        else {
-//            qDebug() << "Here";
-            toAdd.append(path);
-        }
-//        qDebug() << "----";
-    }
-    watcher_->addPaths(toAdd);
 
     QDirIterator fileIt(dir.absolutePath(), QStringList() << "*", QDir::Files, QDirIterator::Subdirectories);
     while(fileIt.hasNext()) {
@@ -58,15 +40,102 @@ void SyncOn::DirChanged(const QString &path) {
     QDir dir(path);
     dir.setFilter(QDir::Files);
     qDebug() << dir.entryInfoList();
-    CompareDirectory(dir.entryInfoList());
+//    CompareDirectory(dir.entryInfoList());
 }
 
 void SyncOn::FileChanged(const QString &path) {
     qDebug() << "File changed:" << path;
+    QStringList splitPath = path.split("/", QString::SkipEmptyParts);
+    splitPath.pop_back();
+    QString dropbucketDirPath = QDir::homePath() + "/Dropbucket";
+//    qDebug() << splitPath.join("/").remove(0,dropbucketDirPath.size());
+    NetworkManager::getInstance()->FilePost(path, splitPath.join("/").remove(0,dropbucketDirPath.size()));
 }
 
-void SyncOn::HandleSync(QJsonDocument directoryJson) {
-    qDebug() << directoryJson;
+void SyncOn::DisplaySyncingWindow() {
+    window_ = new QWidget;
+    window_->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint);
+    window_->setGeometry(600,500,16,16);
+
+    QPalette pal;
+    pal.setColor(QPalette::Background, Qt::white);
+    window_->setAutoFillBackground(true);
+    window_->setPalette(pal);
+
+    QHBoxLayout *layout = new QHBoxLayout();
+    loadingGif_ = new QMovie();
+    loadingGif_->setFileName("://icons/spinning-arrows.gif");
+    QLabel *loadingLabel = new QLabel();
+    QLabel *textLabel = new QLabel();
+    textLabel->setText("Syncing please wait");
+    loadingLabel->setMovie(loadingGif_);
+
+    layout->addWidget(loadingLabel);
+    layout->addWidget(textLabel);
+
+    window_->setLayout(layout);
+    window_->show();
+
+    loadingGif_->start();
+}
+
+void SyncOn::CloseSyncingWindow() {
+    loadingGif_->stop();
+    window_->close();
+}
+
+void SyncOn::WatchFile(QString fileName) {
+    qDebug() << watcher_->addPath(fileName);
+}
+
+bool SyncOn::CheckIfWatching(QString file) {
+    return watcher_->directories().contains(file);
+}
+
+void SyncOn::HandleSync(QJsonArray directoriesArray, QJsonArray filesArray) {
+    watcher_->removePaths(watcher_->files());
+    DisableWindow();
+    // Loading dialog
+    DisplaySyncingWindow();
+
+    QString dropbucketPath = QDir::homePath() + "/Dropbucket";
+    QDir dropbucketDir(dropbucketPath);
+    QDir homeDir(QDir::homePath());
+    if(dropbucketDir.exists()) {
+        // Delete the root dir recursively
+        qDebug() << "Directory exists";
+        qDebug() << dropbucketDir.removeRecursively();
+    }
+
+    // Set up the directories
+    QJsonArray::iterator it;
+    for(it = directoriesArray.begin(); it != directoriesArray.end(); it++) {
+        QString relativePath = (*it).toString();
+        QString directoryPath = dropbucketPath + "/" + relativePath;
+        QDir temp(directoryPath);
+        if(!temp.exists()) {
+            qDebug() << homeDir.mkpath(directoryPath);
+        }
+    }
+
+    // Download all the files
+    QStringList downloadQueue;
+    for(it = filesArray.begin(); it != filesArray.end(); it++) {
+        QJsonObject fileObj = (*it).toObject();
+        QString relativePath = fileObj.keys()[0];
+        downloadQueue.append(relativePath);
+    }
+    NetworkManager::getInstance()->DownloadFiles(downloadQueue);
+}
+
+void SyncOn::RemovePath(QString path) {
+    watcher_->removePath(path);
+}
+
+void SyncOn::DownloadCompleted() {
+    qDebug() << "Download complete";
+    EnableWindow();
+    CloseSyncingWindow();
 }
 
 SyncOn::~SyncOn() {

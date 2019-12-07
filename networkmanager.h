@@ -30,11 +30,13 @@ public:
 
     void SignOutPost(QByteArray *toPost);
 
-    void FilePost(QString filePath, QString DirectoryAddedTo);
+    bool FilePost(QString filePath, QString DirectoryAddedTo);
 
     void FileGet(QString filePath);
 
     void FileDelete(QString relativePath);
+
+    void DownloadFiles(QStringList relativePaths);
 
     static NetworkManager* getInstance();
 
@@ -45,12 +47,21 @@ signals:
 
     void SetUserid(QString userid);
 
-    void LoadScene(QJsonArray directoriesArray, QJsonArray filesArray);
+    void SignInLoadScene(QJsonArray directoriesArray, QJsonArray filesArray);
+
+    void SyncAndLoadScene(QJsonArray directoriesArray, QJsonArray filesArray);
+
+    void DownloadCompleteSignal();
+
+    void FileDeleteSuccessful();
 
 private slots:
     void connected();
+
     void disconnected();
+
     void readJson();
+
     void handleError(QAbstractSocket::SocketError socketError);
 
     void onManagerFinished(QNetworkReply *reply);
@@ -71,6 +82,8 @@ private slots:
 
     void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
+    void DownloadComplete(QNetworkReply *reply);
+
 private:
     // C++ Singleton: https://gist.github.com/pazdera/1098119
     NetworkManager();
@@ -87,6 +100,8 @@ private:
     QFile *file;
     bool httpRequestAborted_;
     QString userid_;
+//    QVector<QString> downloadQueue_;
+    QVector<QNetworkReply*> currentDownloads_;
 };
 
 #endif // NETWORKMANAGER_H

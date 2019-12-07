@@ -10,5 +10,6 @@
         <file>jsons/test_dir.json</file>
         <file>jsons/test.json</file>
         <file>icons/upload.png</file>
+        <file>icons/spinning-arrows.gif</file>
     </qresource>
 </RCC>

@@ -6,9 +6,9 @@
 #include <QPainter>
 #include <QDebug>
 
-class Directory : public QGraphicsPixmapItem
+class Directory : public QObject, public QGraphicsPixmapItem
 {
-//    Q_OBJECT
+    Q_OBJECT
 public:
     enum { Type = UserType + 1 };
 
@@ -36,18 +36,23 @@ public:
         return contents_;
     }
 
+public slots:
+    virtual void NetworkDeleteSuccessful() {};
+
+signals:
+    void Deleted(Directory *deleted);
+
 protected:
     QString name;
     QString relativePath_;
     int x;
     int y;
 
-    Directory* parent;
+    Directory* parent_;
 
     std::vector<Directory*> contents_;
 
 
-private:
 };
 
 #endif // DIRECTORY_H

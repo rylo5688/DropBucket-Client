@@ -31,7 +31,7 @@ void Directory::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 }
 
 Directory* Directory::getParent() {
-    return parent;
+    return parent_ ;
 }
 
 QString Directory::getName() const {
@@ -51,5 +51,5 @@ void Directory::setRelativePath(QString path) {
 }
 
 void Directory::setParent(Directory *parent) {
-    this->parent = parent;
+    parent_ = parent;
 }

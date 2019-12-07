@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     QObject::connect(&ld, &LoginDialog::SetUsername, &w, &MainWindow::SetUsername);
     QObject::connect(&ld, &LoginDialog::SetPassword, &w, &MainWindow::SetPassword);
     QObject::connect(&ld, &LoginDialog::LoadScene, &w, &MainWindow::SignInSuccessful);
+    QObject::connect(NetworkManager::getInstance(), &NetworkManager::DownloadCompleteSignal, &w, &MainWindow::DownloadFinished);
 
     w.show();
     ld.show();

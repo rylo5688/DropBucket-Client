@@ -1,8 +1,8 @@
 #include "datafile.h"
 
+
 DataFile::DataFile(int x, int y, QPixmap pixmap, QGraphicsItem *parent) : Directory(x, y, pixmap, parent)
 {
-
 }
 
 QString DataFile::getMd5() const {
@@ -21,6 +21,11 @@ void DataFile::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
 }
 
 void DataFile::DeleteFile() {
-    qDebug() << "delte!";
     NetworkManager::getInstance()->FileDelete(relativePath_);
+    parent_->RemoveDir(this);
+
+    Deleted(this);
+    qDebug() << "sent signal";
+
+    this->deleteLater();
 }

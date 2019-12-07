@@ -62,10 +62,16 @@ public:
 
     QJsonDocument DirectoryToJson();
 
+    void ClearComposite();
+
 signals:
     void UpdateDirectoryLabel(QString label);
 
-    void HandleSync(QJsonDocument directoryJson);
+    void HandleSync(QJsonArray directoriesArray, QJsonArray filesArray);
+
+    void FileAdded(QString path);
+
+    void FileDeletedSignal(QString relativePath);
 
 public slots:
     void AddFile(QString filePath, QString Md5);
@@ -74,7 +80,20 @@ public slots:
 
     void SignInSuccess(QJsonArray directoriesArray, QJsonArray filesArray);
 
+    void DisableScene();
+
+    void EnableScene();
+
+//    void LoadRootDir();
+
+    void Sync(QJsonArray directoriesArray, QJsonArray filesArray);
+
+private slots:
+    void FileDeleted(Directory *deleted);
+
 private:
+
+    bool allowClicks_;
 
     QJsonObject* currJson_;
     SimpleDirectoryFactory* factory_;
