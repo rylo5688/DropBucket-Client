@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowTitle("  ");
     homeDir_ = QDir::homePath() + "/Dropbucket";
     UISetUp();
     deleteAct = new QAction(tr("&Delete"), this);

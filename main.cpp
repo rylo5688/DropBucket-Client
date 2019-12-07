@@ -17,8 +17,10 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
+    a.setWindowIcon(QIcon(":/icons/dropbucket.png"));
+//    a.setApplicationDisplayName("");
     MainWindow w;
+    w.setFixedSize(1280,720);
     LoginDialog ld;
 
     QObject::connect(&ld, &LoginDialog::SetUsername, &w, &MainWindow::SetUsername);

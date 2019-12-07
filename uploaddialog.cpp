@@ -6,6 +6,7 @@ UploadDialog::UploadDialog(QWidget *parent) :
     ui(new Ui::UploadDialog)
 {
     ui->setupUi(this);
+    this->setWindowTitle("  ");
     uploadedFile_ = "";
     filePath_ = ui->dirEdit;
 }

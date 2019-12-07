@@ -54,6 +54,7 @@ void SyncOn::FileChanged(const QString &path) {
 
 void SyncOn::DisplaySyncingWindow() {
     window_ = new QWidget;
+    window_->setWindowTitle("    ");
     window_->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint);
     window_->setGeometry(600,500,16,16);
 

@@ -85,6 +85,10 @@ void FileExplorerScene::AddIcons(std::vector<Directory*> contents) {
     for(it = contents.begin(); it != contents.end(); it++){
         AddIcon(curr_x_ + offset_x, curr_y_ + offset_y, *it);
         curr_x_ += 56 + offset_x;
+        if(curr_x_ > 1200) {
+            curr_x_ = 0;
+            curr_y_ += 100;
+        }
     }
 }
 
@@ -137,28 +141,6 @@ void FileExplorerScene::LoadScene(Directory* dir) {
     UpdateDirectoryLabel(dir->getRelativePath());
     update();
 }
-
-/**
- * @brief FileExplorerScene::OpenReadJSON
- * @return
- */
-//QJsonObject FileExplorerScene::OpenReadJSON() {
-//    Q_INIT_RESOURCE(resources);
-//    QFile loadFile(QStringLiteral("://jsons/test.json"));
-
-//    if(!loadFile.open(QIODevice::ReadOnly)) {
-//        qDebug() << "couldn't read JSON";
-//    }
-
-//    QByteArray dirData = loadFile.readAll();
-
-//    QJsonParseError err;
-//    QJsonDocument dirDoc(QJsonDocument::fromJson(dirData, &err));
-
-//    QJsonObject obj = dirDoc.object();
-
-//    return obj;
-//}
 
 /**
  * @brief checkInVisited
@@ -333,6 +315,11 @@ void FileExplorerScene::AddFile(QString filePath, QString md5) {
         LoadScene(curr_dir_);
         curr_x_ += 56;
 
+        if(curr_x_ > 1200) {
+            curr_x_ = 0;
+            curr_y_ += 100;
+        }
+
         NetworkManager::getInstance()->FilePost(filePath, curr_dir_->getRelativePath());
         FileAdded(dropbucketDir);
     }
@@ -349,7 +336,6 @@ void FileExplorerScene::AddFile(QString filePath, QString md5) {
         file->close();
         fileToSave.close();
     }
-    // Upload
 }
 
 // DONT THINK THIS IS NEEDED

@@ -7,6 +7,7 @@ ProfileDialog::ProfileDialog(QWidget *parent) :
     ui(new Ui::ProfileDialog)
 {
     ui->setupUi(this);
+    this->setWindowTitle("  ");
 }
 
 ProfileDialog::~ProfileDialog()

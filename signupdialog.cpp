@@ -6,6 +6,7 @@ SignUpDialog::SignUpDialog(QWidget *parent) :
     ui(new Ui::SignUpDialog)
 {
     ui->setupUi(this);
+    this->setWindowTitle("  ");
     connect(NetworkManager::getInstance(), &NetworkManager::SignUpSuccessful, this, &SignUpDialog::SignUpSuccessful);
 }
 

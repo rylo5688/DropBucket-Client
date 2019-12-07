@@ -11,5 +11,6 @@
         <file>jsons/test.json</file>
         <file>icons/upload.png</file>
         <file>icons/spinning-arrows.gif</file>
+        <file>icons/dropbucket.png</file>
     </qresource>
 </RCC>

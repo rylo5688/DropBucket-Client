@@ -14,6 +14,7 @@ LoginDialog::LoginDialog(QWidget *parent) :
     ui(new Ui::LoginDialog)
 {
     ui->setupUi(this);
+    this->setWindowTitle("  ");
     connect(NetworkManager::getInstance(), &NetworkManager::SignInSuccessful, this, &LoginDialog::SignInSuccessful);
 }
 
@@ -65,6 +66,7 @@ void LoginDialog::on_signInButton_2_clicked()
  */
 void LoginDialog::SignInSuccessful() {
     QMessageBox msgBox;
+    msgBox.setWindowTitle("   ");
     msgBox.setText("Sign in successful!");
     msgBox.exec();
     this->close();
