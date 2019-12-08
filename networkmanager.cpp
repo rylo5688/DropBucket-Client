@@ -282,7 +282,7 @@ void NetworkManager::DownloadFiles(QStringList relativePaths) {
 void NetworkManager::DownloadComplete(QNetworkReply *reply) {
     QString urlToRemove = url_ + "/file/?relative_path=";
     QString relativePath = reply->url().toString().remove(0,urlToRemove.size());
-    QFile fileToWrite("C:/Users/thoma/Dropbucket/" + relativePath);
+    QFile fileToWrite(QDir::homePath() + "/Dropbucket/" + relativePath);
     fileToWrite.open(QIODevice::WriteOnly);
     fileToWrite.write(reply->readAll());
     fileToWrite.close();
