@@ -3,8 +3,9 @@
 
 #include <QObject>
 #include "sync.h"
-//#include <QMainWindow>
-//#include "mainwindow.h"
+
+
+// This is a Null Object as it doesn't contain any code and does nothing when instantiated
 
 class SyncOff : public Sync
 {

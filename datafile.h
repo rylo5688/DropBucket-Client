@@ -8,6 +8,8 @@
 #include "directory.h"
 #include "networkmanager.h"
 
+// This is one of the children for the Composite structure
+
 class DataFile : public Directory
 {
     Q_OBJECT

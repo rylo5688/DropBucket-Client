@@ -7,6 +7,8 @@
 #include "datafile.h"
 #include "folder.h"
 
+// This is a Simple Factory pattern
+
 class SimpleDirectoryFactory
 {
 public:

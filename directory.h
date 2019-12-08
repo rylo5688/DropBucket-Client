@@ -6,6 +6,8 @@
 #include <QPainter>
 #include <QDebug>
 
+// This is the base class of a Composite structure with the children as DataFile and Folder
+
 class Directory : public QObject, public QGraphicsPixmapItem
 {
     Q_OBJECT

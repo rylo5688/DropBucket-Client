@@ -19,6 +19,8 @@
 #include <QHttpPart>
 #include <QRandomGenerator>
 
+// This uses a Singleton pattern so there is only one instance of NetworkManager
+
 class NetworkManager : public QObject
 {
     Q_OBJECT

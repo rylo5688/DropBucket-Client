@@ -7,6 +7,8 @@
 #include "directory.h"
 #include "datafile.h"
 
+// This is one of the children for the Composite structure
+
 class Folder : public Directory
 {
     Q_OBJECT
