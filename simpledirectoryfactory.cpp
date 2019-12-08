@@ -4,12 +4,13 @@ SimpleDirectoryFactory::SimpleDirectoryFactory(){}
 
 /**
  * @brief SimpleDirectoryFactory::createDir
- * @param x
- * @param y
- * @param type
- * @param name
- * @param md5
- * @return
+ * Creates a directory of a specified type
+ * @param x X location
+ * @param y Y location
+ * @param type Type of directory (file or folder)
+ * @param name Name of the directory
+ * @param md5 Md5 if a file
+ * @return Created directory
  */
 Directory* SimpleDirectoryFactory::createDir(int x, int y, QString type, QString name, QString md5) {
     if(type == "file") {
@@ -34,5 +35,5 @@ Directory* SimpleDirectoryFactory::createDir(int x, int y, QString type, QString
     }
 
 
-    return NULL;
+    return nullptr;
 }

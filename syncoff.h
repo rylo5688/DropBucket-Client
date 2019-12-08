@@ -11,9 +11,6 @@ class SyncOff : public Sync
     Q_OBJECT
 public:
     SyncOff();
-
-//    void HandleSync(QJsonDocument directoryJson) override {}
-
 };
 
 #endif // SYNCOFF_H

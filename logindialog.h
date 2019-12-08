@@ -25,11 +25,11 @@ private slots:
     void on_signInButton_2_clicked();
 
 signals:
-    void SetUsername(QString username);
+    void SetUsernameSignal(QString username);
 
-    void SetPassword(QString password);
+    void SetPasswordSignal(QString password);
 
-    void LoadScene();
+    void LoadSceneSignal();
 
 private slots:
     void SignInSuccessful();

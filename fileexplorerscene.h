@@ -24,8 +24,7 @@
 #include "simpledirectoryfactory.h"
 #include "networkmanager.h"
 
-// JSON stuff: https://doc.qt.io/qt-5/qtcore-serialization-savegame-example.html
-
+// JSON example: https://doc.qt.io/qt-5/qtcore-serialization-savegame-example.html
 class FileExplorerScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -52,8 +51,6 @@ public:
 
     void AddIcons(std::vector<Directory*> contents);
 
-    QJsonObject OpenReadJSON();
-
     void CreateDirectoryComposite(QJsonArray directoriesArray, QJsonArray filesArray);
 
     int getDirectoryMapSize() { return directoryMap_.size(); }
@@ -65,18 +62,16 @@ public:
     void ClearComposite();
 
 signals:
-    void UpdateDirectoryLabel(QString label);
+    void UpdateDirectoryLabelSignal(QString label);
 
-    void HandleSync(QJsonArray directoriesArray, QJsonArray filesArray);
+    void HandleSyncSignal(QJsonArray directoriesArray, QJsonArray filesArray);
 
-    void FileAdded(QString path);
+    void FileAddedSignal(QString path);
 
     void FileDeletedSignal(QString relativePath);
 
 public slots:
     void AddFile(QString filePath, QString Md5);
-
-    void CompareDirectory(QFileInfoList files);
 
     void SignInSuccess(QJsonArray directoriesArray, QJsonArray filesArray);
 

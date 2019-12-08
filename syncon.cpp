@@ -1,5 +1,9 @@
 #include "syncon.h"
 
+/**
+ * @brief SyncOn::SyncOn
+ * Sync on constructor
+ */
 SyncOn::SyncOn() : Sync()
 {
     watcher_ = new QFileSystemWatcher;
@@ -8,14 +12,9 @@ SyncOn::SyncOn() : Sync()
 }
 
 /**
-  When directory changes, compare directory contents to what is in corresponding Directory
-  (fileExplorerScene), send necessary request
-  When file changes, send
- */
-
-/**
  * @brief SyncOn::WatchDirectory
- * @param dir
+ * Watches a directory by recursively going down and add the files to the watcher
+ * @param dir Directory to watch
  */
 void SyncOn::WatchDirectory(QDir dir) {
     QDirIterator it(dir.absolutePath(), QDir::Dirs, QDirIterator::Subdirectories);
@@ -24,14 +23,12 @@ void SyncOn::WatchDirectory(QDir dir) {
     while(fileIt.hasNext()) {
         watcher_->addPath(fileIt.next());
     }
-
-    qDebug() << watcher_->files();
-    qDebug() << watcher_->directories();
 }
 
 /**
  * @brief SyncOn::DirChanged
- * @param path
+ * Handles when a directory is changed - currently not used but planned to be
+ * @param path Path to the directory
  */
 void SyncOn::DirChanged(const QString &path) {
     qDebug() << "Directory changed: " << path;
@@ -43,15 +40,22 @@ void SyncOn::DirChanged(const QString &path) {
 //    CompareDirectory(dir.entryInfoList());
 }
 
+/**
+ * @brief SyncOn::FileChanged
+ * Handles when a file is changed
+ * @param path Path to the changed file
+ */
 void SyncOn::FileChanged(const QString &path) {
-    qDebug() << "File changed:" << path;
     QStringList splitPath = path.split("/", QString::SkipEmptyParts);
     splitPath.pop_back();
     QString dropbucketDirPath = QDir::homePath() + "/Dropbucket";
-//    qDebug() << splitPath.join("/").remove(0,dropbucketDirPath.size());
     NetworkManager::getInstance()->FilePost(path, splitPath.join("/").remove(0,dropbucketDirPath.size()));
 }
 
+/**
+ * @brief SyncOn::DisplaySyncingWindow
+ * Displays the syncing window
+ */
 void SyncOn::DisplaySyncingWindow() {
     window_ = new QWidget;
     window_->setWindowTitle("    ");
@@ -80,22 +84,44 @@ void SyncOn::DisplaySyncingWindow() {
     loadingGif_->start();
 }
 
+/**
+ * @brief SyncOn::CloseSyncingWindow
+ * Closes the syncing window and stops the loading gif
+ */
 void SyncOn::CloseSyncingWindow() {
     loadingGif_->stop();
     window_->close();
 }
 
+/**
+ * @brief SyncOn::WatchFile
+ * Watches a file
+ * @param fileName file path to watch
+ */
 void SyncOn::WatchFile(QString fileName) {
     qDebug() << watcher_->addPath(fileName);
 }
 
+/**
+ * @brief SyncOn::CheckIfWatching
+ * Checks to see if a file is being watched
+ * @param file File to check
+ * @return Whether it is being watched or not
+ */
 bool SyncOn::CheckIfWatching(QString file) {
     return watcher_->directories().contains(file);
 }
 
+/**
+ * @brief SyncOn::HandleSync
+ * Handles a sync
+ * @param directoriesArray Directory's on the bucket
+ * @param filesArray Files in the bucket
+ */
 void SyncOn::HandleSync(QJsonArray directoriesArray, QJsonArray filesArray) {
+    qDebug() << "Handling sync";
     watcher_->removePaths(watcher_->files());
-    DisableWindow();
+    DisableWindowSignal();
     // Loading dialog
     DisplaySyncingWindow();
 
@@ -104,10 +130,10 @@ void SyncOn::HandleSync(QJsonArray directoriesArray, QJsonArray filesArray) {
     QDir homeDir(QDir::homePath());
     if(dropbucketDir.exists()) {
         // Delete the root dir recursively
-        qDebug() << "Directory exists";
         qDebug() << dropbucketDir.removeRecursively();
     }
 
+    homeDir.mkdir("Dropbucket");
     // Set up the directories
     QJsonArray::iterator it;
     for(it = directoriesArray.begin(); it != directoriesArray.end(); it++) {
@@ -126,19 +152,39 @@ void SyncOn::HandleSync(QJsonArray directoriesArray, QJsonArray filesArray) {
         QString relativePath = fileObj.keys()[0];
         downloadQueue.append(relativePath);
     }
-    NetworkManager::getInstance()->DownloadFiles(downloadQueue);
+
+    if(!downloadQueue.empty()) {
+        NetworkManager::getInstance()->DownloadFiles(downloadQueue);
+    }
+    else{
+        EnableWindowSignal();
+        CloseSyncingWindow();
+    }
 }
 
+/**
+ * @brief SyncOn::RemovePath
+ * Removes a path from the watcher
+ * @param path Path to remove
+ */
 void SyncOn::RemovePath(QString path) {
     watcher_->removePath(path);
 }
 
+/**
+ * @brief SyncOn::DownloadCompleted
+ * Handles when the sync downloads are finished, closes window
+ */
 void SyncOn::DownloadCompleted() {
     qDebug() << "Download complete";
-    EnableWindow();
+    EnableWindowSignal();
     CloseSyncingWindow();
 }
 
+/**
+ * @brief SyncOn::~SyncOn
+ * Sync on destructor
+ */
 SyncOn::~SyncOn() {
     delete watcher_;
 }

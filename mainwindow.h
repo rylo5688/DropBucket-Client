@@ -43,11 +43,9 @@ private:
 
     Ui::MainWindow *ui;
 
-    FileExplorerScene *fileExplorerScene;
+    FileExplorerScene *fileExplorerScene_;
 
-    QLabel *filePathLabel;
-
-    std::string currentDirectory;
+    QLabel *filePathLabel_;
 
     ProfileDialog* profile_;
 
@@ -57,7 +55,7 @@ private:
 
     bool syncStatus_;
 
-    QAction *deleteAct;
+    QAction *deleteAct_;
 
 private slots:
     void on_uploadButton_clicked();
@@ -70,7 +68,7 @@ private slots:
 
     void UpdateDirectoryLabel(QString label);
 
-    void deleteFile();
+    void DeleteFile();
 
     void EnableWindow();
 

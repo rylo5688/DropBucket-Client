@@ -11,8 +11,6 @@
 #include <QPalette>
 #include "sync.h"
 #include "networkmanager.h"
-//#include <QMainWindow>
-//#include "mainwindow.h"
 
 class SyncOn : public Sync
 {

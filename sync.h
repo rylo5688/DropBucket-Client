@@ -30,11 +30,11 @@ public slots:
     virtual void DownloadCompleted() {}
 
 signals:
-    void CompareDirectory(QFileInfoList files);
+    void CompareDirectorySignal(QFileInfoList files);
 
-    void DisableWindow();
+    void DisableWindowSignal();
 
-    void EnableWindow();
+    void EnableWindowSignal();
 
 protected:
     QFileSystemWatcher* watcher_;

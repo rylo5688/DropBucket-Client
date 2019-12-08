@@ -41,19 +41,19 @@ public:
     static NetworkManager* getInstance();
 
 signals:
-    void SignUpSuccessful();
+    void SignUpSuccessfulSignal();
 
-    void SignInSuccessful();
+    void SignInSuccessfulSignal();
 
-    void SetUserid(QString userid);
+    void SetUseridSignal(QString userid);
 
-    void SignInLoadScene(QJsonArray directoriesArray, QJsonArray filesArray);
+    void SignInLoadSceneSignal(QJsonArray directoriesArray, QJsonArray filesArray);
 
-    void SyncAndLoadScene(QJsonArray directoriesArray, QJsonArray filesArray);
+    void SyncAndLoadSceneSignal(QJsonArray directoriesArray, QJsonArray filesArray);
 
     void DownloadCompleteSignal();
 
-    void FileDeleteSuccessful();
+    void FileDeleteSuccessfulSignal();
 
 private slots:
     void connected();
@@ -80,7 +80,7 @@ private slots:
 
     void onDeleteFileManagerFinished(QNetworkReply *reply);
 
-    void downloadProgress(qint64 bytesReceived, qint64 bytesTotal);
+    void DownloadProgress(qint64 bytesReceived, qint64 bytesTotal);
 
     void DownloadComplete(QNetworkReply *reply);
 
@@ -93,14 +93,10 @@ private:
     void Post(QNetworkRequest *request, QByteArray *toPost);
 
     QTcpSocket* socket_;
-    QString url;
+    QString url_;
     QNetworkAccessManager manager_;
-//    QNetworkRequest request_;
     QNetworkReply *reply_;
-    QFile *file;
-    bool httpRequestAborted_;
     QString userid_;
-//    QVector<QString> downloadQueue_;
     QVector<QNetworkReply*> currentDownloads_;
 };
 

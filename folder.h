@@ -23,8 +23,6 @@ public:
 
     void RemoveDir(Directory* dir) override;
 
-//    void onClick() override;
-
 private:
 };
 

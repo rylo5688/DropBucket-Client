@@ -7,7 +7,8 @@
 
 /**
  * @brief LoginDialog::LoginDialog
- * @param parent
+ * Login Dialog contructor
+ * @param parent Parent
  */
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent),
@@ -15,11 +16,12 @@ LoginDialog::LoginDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setWindowTitle("  ");
-    connect(NetworkManager::getInstance(), &NetworkManager::SignInSuccessful, this, &LoginDialog::SignInSuccessful);
+    connect(NetworkManager::getInstance(), &NetworkManager::SignInSuccessfulSignal, this, &LoginDialog::SignInSuccessful);
 }
 
 /**
  * @brief LoginDialog::~LoginDialog
+ * Destroys LoginDialog
  */
 LoginDialog::~LoginDialog()
 {
@@ -28,31 +30,28 @@ LoginDialog::~LoginDialog()
 
 /**
  * @brief LoginDialog::on_signInButton_clicked
+ * Handles when the sign in button is clicked
  */
 void LoginDialog::on_signInButton_clicked()
 {
     const QString username = ui->emailLineEdit->text();
     const QString password = ui->passwordLineEdit->text();
 
-    qDebug() << "sign in button clicked";
-    qDebug() << username;
-    qDebug() << password;
-
     QByteArray id = QSysInfo::machineUniqueId();
     QString data = QString("{\"username\":\"%1\",\"password\":\"%2\",\"device_id\":\"%3\"}").arg(username, password, id);
-    qDebug() << data;
     QByteArray toPost = data.toUtf8();
     NetworkManager* nMgr = NetworkManager::getInstance();
 
     nMgr->SignInPost(&toPost);
 
-    SetUsername(username);
-    SetPassword(password);
-    LoadScene();
+    SetUsernameSignal(username);
+    SetPasswordSignal(password);
+    LoadSceneSignal();
 }
 
 /**
  * @brief LoginDialog::on_signInButton_2_clicked
+ * Handles when the sign up button is clicked
  */
 void LoginDialog::on_signInButton_2_clicked()
 {

@@ -20,7 +20,7 @@ public:
     ~UploadDialog();
 
 signals:
-    void UploadFile(QString fileName, QString md5);
+    void UploadFileSignal(QString fileName, QString md5);
 
 private slots:
 

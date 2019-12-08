@@ -13,6 +13,7 @@ NetworkManager* NetworkManager::instance_ = nullptr;
 
 /**
  * @brief NetworkManager::NetworkManager
+ * Network manager constructor
  */
 NetworkManager::NetworkManager()
 {
@@ -21,14 +22,15 @@ NetworkManager::NetworkManager()
     connect(socket_, &QTcpSocket::disconnected, this, &NetworkManager::disconnected);
     connect(socket_, &QIODevice::readyRead, this, &NetworkManager::readJson);
     connect(socket_, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), this, &NetworkManager::handleError);
-//    socket_->write(); write "username,device_id"
 
-    url = "http://localhost:5000";
+    url_ = "http://34.66.244.22:8000"; // Server: 34.66.244.22
+//    url_ = "http://localhost:5000";
 }
 
 /**
  * @brief NetworkManager::getInstance
- * @return
+ * Gets the singleton instance of the Network Manager
+ * @return Instance of the Network Manager
  */
 NetworkManager* NetworkManager::getInstance() {
     if(instance_ == nullptr) {
@@ -39,19 +41,9 @@ NetworkManager* NetworkManager::getInstance() {
     return instance_;
 }
 
-/* Saved for if we need to a do a put
-void NetworkManager::Put(QString urlSuffix, QFile *toPut) {
-    QUrl putUrl = url + urlSuffix;
-    QNetworkRequest request(putUrl); // replace with put url
-    if(toPut->open(QIODevice::ReadOnly)) {
-        QByteArray ba = toPut->readAll();
-        manager_.put(request, ba);
-    }
-}
-*/
-
 /**
  * @brief NetworkManager::Post
+ * Posts to a JSON request to the server
  * @param request
  * @param toPost
  */
@@ -59,28 +51,29 @@ void NetworkManager::Post(QNetworkRequest *request, QByteArray *toPost) {
     request->setHeader(QNetworkRequest::ContentLengthHeader, toPost->length()); // TODO
     request->setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     manager_.post(*request, *toPost);
-    qDebug() << "Posted";
 }
 
 /**
  * @brief NetworkManager::SignInPost
- * @param toPost
+ * Handles a sign in post request
+ * @param toPost Json to post
  */
 void NetworkManager::SignInPost(QByteArray *toPost) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignInManagerFinished);
-    QUrl postUrl = url + "/users/signin";
+    QUrl postUrl = url_ + "/users/signin";
+    qDebug() << *toPost;
     QNetworkRequest request(postUrl); // replace w/ post url
-//    Post(&manager, &request, toPost);
     Post(&request, toPost);
 }
 
 /**
  * @brief NetworkManager::SignUpPost
- * @param toPost
+ * Handles a sign up post request
+ * @param toPost Json to post
  */
 void NetworkManager::SignUpPost(QByteArray *toPost) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignUpManagerFinished);
-    QUrl postUrl = url + "/users/signup";
+    QUrl postUrl = url_ + "/users/signup";
     qDebug() << postUrl;
     QNetworkRequest request(postUrl); // replace w/ post url
     Post(&request, toPost);
@@ -88,25 +81,25 @@ void NetworkManager::SignUpPost(QByteArray *toPost) {
 
 /**
  * @brief NetworkManager::SignOutPost
- * @param toPost
+ * Handles sign out post request
+ * @param toPost Json to post
  */
 void NetworkManager::SignOutPost(QByteArray *toPost) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignOutManagerFinished);
-    QUrl postUrl = url + "/users/signout";
+    QUrl postUrl = url_ + "/users/signout";
     QNetworkRequest request(postUrl); // replace w/ post url
     Post(&request, toPost);
 }
 
 /**
  * @brief NetworkManager::FilePost
- * @param filePath
- * @param DirectoryAddedTo
+ * Handles a file POST to the server
+ * @param filePath File path to the file to post
+ * @param DirectoryAddedTo Directory the file was added to
  */
 bool NetworkManager::FilePost(QString filePath, QString directory) {
-    qDebug() << directory;
-
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
-    QUrl postUrl = url + "/file/";
+    QUrl postUrl = url_ + "/file/";
     QNetworkRequest request(postUrl);
 
     QString dropbucketDirPath = QDir::homePath() + "/Dropbucket";
@@ -164,48 +157,62 @@ bool NetworkManager::FilePost(QString filePath, QString directory) {
     QNetworkReply *reply = manager_.post(request, multiPart);
     multiPart->setParent(reply);
 //    file->close();
+
+    return true;
 }
 
 /**
  * @brief NetworkManager::GetFile
- * @param urlSuffix
+ * Gets a file from the server
+ * @param filePath The file path for the parameters in the get
  */
 void NetworkManager::FileGet(QString filePath) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onGetFileManagerFinished);
-    QUrl getUrl = url + "/file/?relative_path=" + "test.txt";
+    QUrl getUrl = url_ + "/file/?relative_path=" + "test.txt";
     qDebug() << getUrl;
     QNetworkRequest request(getUrl);
     reply_ = manager_.get(request);
-    connect(reply_, &QNetworkReply::downloadProgress, this, &NetworkManager::downloadProgress);
+    connect(reply_, &QNetworkReply::downloadProgress, this, &NetworkManager::DownloadProgress);
     connect(reply_, &QNetworkReply::readyRead, this, &NetworkManager::onGetFileReadyRead);
 }
 
-
-void NetworkManager::downloadProgress(qint64 bytesReceived, qint64 bytesTotal) {
+/**
+ * @brief NetworkManager::DownloadProgress
+ * Reports the download progress
+ * @param bytesReceived
+ * @param bytesTotal
+ */
+void NetworkManager::DownloadProgress(qint64 bytesReceived, qint64 bytesTotal) {
     qDebug() << bytesReceived << bytesTotal;
 }
 
 /**
  * @brief NetworkManager::Delete
- * @param urlSuffix
- * @param toDelete
+ * Deletes a file from the network
+ * @param relativePath String to the relative path of the file
  */
 void NetworkManager::FileDelete(QString relativePath) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onDeleteFileManagerFinished);
 
-    QUrl deleteUrl = url + "/file/?relative_path=" + relativePath;
-    QNetworkRequest request(deleteUrl); // replace URL w/ path to the file going to be deleted
+    QUrl deleteUrl = url_ + "/file/?relative_path=" + relativePath;
+    QNetworkRequest request(deleteUrl);
     manager_.deleteResource(request);
 }
 
 /**
  * @brief NetworkManager::handleError
- * @param socketError
+ * Reports socket error
+ * @param socketError Socket error
  */
 void NetworkManager::handleError(QAbstractSocket::SocketError socketError) {
     qDebug() << socketError;
 }
 
+/**
+ * @brief NetworkManager::onManagerFinished
+ * Handles when the manager finishes
+ * @param reply Reply from server
+ */
 void NetworkManager::onManagerFinished(QNetworkReply *reply) {
     qDebug() << reply;
     QVariant status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
@@ -218,7 +225,8 @@ void NetworkManager::onManagerFinished(QNetworkReply *reply) {
 
 /**
  * @brief NetworkManager::onSignInManagerFinished
- * @param reply
+ * Handles when the sign in request is completed
+ * @param reply Reply from the server
  */
 void NetworkManager::onSignInManagerFinished(QNetworkReply *reply) {
     QByteArray buffer = reply->readAll();
@@ -231,24 +239,32 @@ void NetworkManager::onSignInManagerFinished(QNetworkReply *reply) {
     QString userid = jsonReply["user_id"].toString();
 
     QString message = jsonReply["message"].toString();
+    qDebug() << status;
+    qDebug() << message;
     if(message == "Sign in successful") {
-        SignInSuccessful();
+        SignInSuccessfulSignal();
 
-        socket_->connectToHost("localhost", 12000); // Need host name, port
+        socket_->connectToHost("34.66.244.22", 12000);
+//        socket_->connectToHost("localhost", 12000);
         socket_->setSocketOption(QAbstractSocket::KeepAliveOption, true);
 
-        SignInLoadScene(directoriesArray, fileSystemArray);
+        SignInLoadSceneSignal(directoriesArray, fileSystemArray);
         userid_ = userid;
-        SetUserid(userid);
+        SetUseridSignal(userid);
     }
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignInManagerFinished);
 }
 
+/**
+ * @brief NetworkManager::DownloadFiles
+ * Downloads the files needed from sync
+ * @param relativePaths List of the relative paths to download
+ */
 void NetworkManager::DownloadFiles(QStringList relativePaths) {
     connect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::DownloadComplete);
 
-    QString getUrl = url + "/file/?relative_path=";
+    QString getUrl = url_ + "/file/?relative_path=";
     QStringList::Iterator it;
     for(it = relativePaths.begin(); it != relativePaths.end(); it++) {
         QNetworkRequest request(QUrl(getUrl + (*it)));
@@ -258,13 +274,14 @@ void NetworkManager::DownloadFiles(QStringList relativePaths) {
     }
 }
 
+/**
+ * @brief NetworkManager::DownloadComplete
+ * Handles when a download is completed
+ * @param reply
+ */
 void NetworkManager::DownloadComplete(QNetworkReply *reply) {
-    qDebug() << "Download complete";
-//    qDebug() << reply_->readAll();
-    qDebug() << reply->url();
-    QString urlToRemove = url + "/file/?relative_path=";
+    QString urlToRemove = url_ + "/file/?relative_path=";
     QString relativePath = reply->url().toString().remove(0,urlToRemove.size());
-    qDebug() << relativePath;
     QFile fileToWrite("C:/Users/thoma/Dropbucket/" + relativePath);
     fileToWrite.open(QIODevice::WriteOnly);
     fileToWrite.write(reply->readAll());
@@ -277,37 +294,34 @@ void NetworkManager::DownloadComplete(QNetworkReply *reply) {
     if(currentDownloads_.empty()) {
         disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::DownloadComplete);
         // Emit signal
-        qDebug() << "Current downloads empty";
         DownloadCompleteSignal();
     }
 }
 
 /**
  * @brief NetworkManager::onSignUpManagerFinished
- * @param reply
+ * Handles when a sign up request is complete
+ * @param reply Reply from server
  */
 void NetworkManager::onSignUpManagerFinished(QNetworkReply *reply) {
-    qDebug() << "Manager finished called";
     QByteArray buffer = reply->readAll();
-    qDebug() << buffer;
     QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
     QJsonObject jsonReply = jsonDoc.object();
 
     QString message = jsonReply["message"].toString();
-    qDebug() << message;
     if(message == "User successfully created! You can now sign in.") {
-        SignUpSuccessful();
+        SignUpSuccessfulSignal();
     }
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onSignUpManagerFinished);
 }
 
 /**
  * @brief NetworkManager::onSignOutManagerFinished
- * @param reply
+ * Handles when a sign out request is complete
+ * @param reply Reply from server
  */
 void NetworkManager::onSignOutManagerFinished(QNetworkReply *reply) {
     QByteArray buffer = reply->readAll();
-    qDebug() << buffer;
     QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
     QJsonObject jsonReply = jsonDoc.object();
 
@@ -316,35 +330,44 @@ void NetworkManager::onSignOutManagerFinished(QNetworkReply *reply) {
     reply->deleteLater();
 }
 
+/**
+ * @brief NetworkManager::onFileManagerFinished
+ * Handles whena file POST is complete
+ * @param reply Reply from server
+ */
 void NetworkManager::onFileManagerFinished(QNetworkReply *reply) {
     QByteArray buffer = reply->readAll();
-    qDebug() << buffer;
     QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
     QJsonObject jsonReply = jsonDoc.object();
 
     QString message = jsonReply["message"].toString();
-    qDebug() << message;
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onFileManagerFinished);
     reply->deleteLater();
 }
 
+/**
+ * @brief NetworkManager::onGetFileManagerFinished
+ * Handles when a file get is complete
+ * @param reply Reply from server
+ */
 void NetworkManager::onGetFileManagerFinished(QNetworkReply *reply) {
-    qDebug() << "In file manager get";
-    qDebug() << reply;
     if(reply->error()) {
         qDebug() << reply->errorString();
     }
     else{
         qDebug() << "no error";
     }
-    qDebug() << "End manager";
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onGetFileManagerFinished);
     reply->deleteLater();
 }
 
+/**
+ * @brief NetworkManager::onGetFileReadyRead
+ * Handles when a get file is done - this is a test function
+ */
 void NetworkManager::onGetFileReadyRead() {
-    QString urlToRemove = url + "/file/?relative_path=";
+    QString urlToRemove = url_ + "/file/?relative_path=";
     QString relativePath = reply_->url().toString().remove(0,urlToRemove.size());
     QFile fileToWrite("C:/Users/thoma/Dropbucket/test.txt");
     fileToWrite.open(QIODevice::WriteOnly);
@@ -352,6 +375,11 @@ void NetworkManager::onGetFileReadyRead() {
     fileToWrite.close();
 }
 
+/**
+ * @brief NetworkManager::onDeleteFileManagerFinished
+ * Handles when a delete file request is complete
+ * @param reply Reply from server
+ */
 void NetworkManager::onDeleteFileManagerFinished(QNetworkReply *reply) {
     QByteArray buffer = reply->readAll();
     QJsonDocument jsonDoc(QJsonDocument::fromJson(buffer));
@@ -362,7 +390,7 @@ void NetworkManager::onDeleteFileManagerFinished(QNetworkReply *reply) {
     qDebug() << message;
 
     if(message == "File successfully deleted") {
-        FileDeleteSuccessful();
+        FileDeleteSuccessfulSignal();
     }
 
     disconnect(&manager_, &QNetworkAccessManager::finished, this, &NetworkManager::onDeleteFileManagerFinished);
@@ -389,9 +417,9 @@ void NetworkManager::disconnected() {
 
 /**
  * @brief NetworkManager::readJson
+ * Reads a json recieved in the socket
  */
 void NetworkManager::readJson() {
-    qDebug() << "response received from socket";
     QByteArray read = socket_->readAll();
     QJsonDocument tcpJson(QJsonDocument::fromJson(read));
     QJsonObject jsonReply = tcpJson.object();
@@ -399,5 +427,5 @@ void NetworkManager::readJson() {
     QJsonArray fileSystemArray = jsonReply["fs_objects"].toArray();
     QJsonArray directoriesArray = jsonReply["directories"].toArray();
 
-    SyncAndLoadScene(directoriesArray, fileSystemArray);
+    SyncAndLoadSceneSignal(directoriesArray, fileSystemArray);
 }
