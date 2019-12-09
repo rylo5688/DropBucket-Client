@@ -7,4 +7,4 @@
 - Language: C++
 - Environment: Qt Creator/Qt 5.12.5
 
-In order to run this application, Qt Creator must be installed along with Qt 5.12.5. Once a kit has been assigned to the project, you should be able to run it from Qt Creator.
+In order to run this application, Qt Creator must be installed along with Qt 5.12.5. Clone the repo, and open the DropBucket-Client directory in Qt. Once a kit has been assigned to the project, you should be able to run it from Qt Creator.
